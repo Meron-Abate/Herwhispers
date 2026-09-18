@@ -1,0 +1,366 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model allocation_rules {
+  id                       String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaign_product_id      String            @unique @db.Uuid
+  quantity_per_participant Int
+  campaign_products        campaign_products @relation(fields: [campaign_product_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model allocations {
+  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  participant_id      String            @db.Uuid
+  campaign_id         String            @db.Uuid
+  campaign_product_id String            @db.Uuid
+  quantity            Int
+  status              allocation_status @default(PROPOSED)
+  confirmed_at        DateTime?         @db.Timestamptz(6)
+  created_at          DateTime          @default(now()) @db.Timestamptz(6)
+  campaigns           campaigns         @relation(fields: [campaign_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  campaign_products   campaign_products @relation(fields: [campaign_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  participants        participants      @relation(fields: [participant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  distributions       distributions?
+
+  @@index([campaign_id], map: "allocations_campaign_idx")
+  @@index([participant_id], map: "allocations_participant_idx")
+}
+
+model answer_options {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  question_id     String    @db.Uuid
+  label           String
+  score_weight    Int       @default(0)
+  is_disqualifier Boolean   @default(false)
+  questions       questions @relation(fields: [question_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([question_id], map: "answer_options_question_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model assessment_answers {
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  attempt_id          String              @db.Uuid
+  question_id         String              @db.Uuid
+  answer_option_id    String?             @db.Uuid
+  score               Int
+  number_value        Decimal?            @db.Decimal
+  assessment_attempts assessment_attempts @relation(fields: [attempt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  questions           questions           @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model assessment_attempts {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assessment_id      String               @db.Uuid
+  campaign_id        String               @db.Uuid
+  student_id         String               @db.Uuid
+  total_score        Int                  @default(0)
+  result             assessment_result?
+  result_reason      String?
+  started_at         DateTime             @default(now()) @db.Timestamptz(6)
+  submitted_at       DateTime?            @db.Timestamptz(6)
+  assessment_answers assessment_answers[]
+  assessments        assessments          @relation(fields: [assessment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  campaigns          campaigns            @relation(fields: [campaign_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students           students             @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  participants       participants?
+
+  @@unique([student_id, campaign_id])
+  @@index([campaign_id], map: "assessment_attempts_campaign_idx")
+  @@index([student_id], map: "assessment_attempts_student_idx")
+}
+
+model assessment_universities {
+  assessment_id String       @db.Uuid
+  university_id String       @db.Uuid
+  assessments   assessments  @relation(fields: [assessment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  universities  universities @relation(fields: [university_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([assessment_id, university_id])
+}
+
+model assessments {
+  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title                   String                    @db.VarChar(200)
+  description             String?
+  is_active               Boolean                   @default(true)
+  created_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  assessment_attempts     assessment_attempts[]
+  assessment_universities assessment_universities[]
+  campaigns               campaigns[]
+  eligibility_rules       eligibility_rules[]
+  questions               questions[]
+}
+
+model campaign_products {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaign_id      String            @db.Uuid
+  product_id       String            @db.Uuid
+  allocation_rules allocation_rules?
+  allocations      allocations[]
+  campaigns        campaigns         @relation(fields: [campaign_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products         products          @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([campaign_id, product_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model campaigns {
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String                  @db.VarChar(200)
+  description           String?
+  assessment_id         String                  @db.Uuid
+  registration_start    DateTime                @db.Timestamptz(6)
+  registration_end      DateTime                @db.Timestamptz(6)
+  distribution_date     DateTime?               @db.Timestamptz(6)
+  status                campaign_status         @default(DRAFT)
+  created_at            DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime                @default(now()) @db.Timestamptz(6)
+  allocations           allocations[]
+  assessment_attempts   assessment_attempts[]
+  campaign_products     campaign_products[]
+  assessments           assessments             @relation(fields: [assessment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  distributions         distributions[]
+  participants          participants[]
+  partner_contributions partner_contributions[]
+
+  @@index([assessment_id], map: "campaigns_assessment_idx")
+  @@index([status])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model distributions {
+  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  allocation_id  String              @unique @db.Uuid
+  campaign_id    String              @db.Uuid
+  participant_id String              @db.Uuid
+  quantity       Int
+  status         distribution_status @default(COMPLETED)
+  distributed_at DateTime            @default(now()) @db.Timestamptz(6)
+  allocations    allocations         @relation(fields: [allocation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  campaigns      campaigns           @relation(fields: [campaign_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  participants   participants        @relation(fields: [participant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([campaign_id], map: "distributions_campaign_idx")
+  @@index([participant_id], map: "distributions_participant_idx")
+}
+
+model eligibility_rules {
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assessment_id String            @db.Uuid
+  name          String            @db.VarChar(200)
+  minimum_score Int?
+  maximum_score Int?
+  result        assessment_result
+  reason        String?
+  priority      Int               @default(1)
+  assessments   assessments       @relation(fields: [assessment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([assessment_id, priority], map: "eligibility_rules_assessment_idx")
+}
+
+model participants {
+  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  participant_code      String              @unique @db.VarChar(50)
+  student_id            String              @db.Uuid
+  campaign_id           String              @db.Uuid
+  assessment_attempt_id String              @unique @db.Uuid
+  status                participant_status  @default(VERIFIED)
+  registered_at         DateTime            @default(now()) @db.Timestamptz(6)
+  allocations           allocations[]
+  distributions         distributions[]
+  assessment_attempts   assessment_attempts @relation(fields: [assessment_attempt_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  campaigns             campaigns           @relation(fields: [campaign_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students              students            @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  qr_codes              qr_codes?
+  waiting_list          waiting_list?
+
+  @@unique([student_id, campaign_id])
+  @@index([campaign_id, status], map: "participants_campaign_status_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model partner_contributions {
+  id                String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  partner_id        String                       @db.Uuid
+  campaign_id       String                       @db.Uuid
+  product_id        String                       @db.Uuid
+  contribution_type contribution_type
+  quantity          Int
+  manufacturer_name String?                      @db.VarChar(200)
+  delivery_status   contribution_delivery_status @default(PENDING)
+  delivered_at      DateTime?                    @db.Timestamptz(6)
+  notes             String?
+  created_at        DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime                     @default(now()) @db.Timestamptz(6)
+  campaigns         campaigns                    @relation(fields: [campaign_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  partners          partners                     @relation(fields: [partner_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products          products                     @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([campaign_id], map: "partner_contributions_campaign_idx")
+  @@index([partner_id], map: "partner_contributions_partner_idx")
+  @@index([product_id], map: "partner_contributions_product_idx")
+}
+
+model partners {
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  company_name          String                  @db.VarChar(200)
+  contact_person        String?                 @db.VarChar(200)
+  phone                 String?                 @db.VarChar(50)
+  email                 String?                 @db.VarChar(200)
+  address               String?
+  is_active             Boolean                 @default(true)
+  created_at            DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime                @default(now()) @db.Timestamptz(6)
+  partner_contributions partner_contributions[]
+}
+
+model products {
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String                  @db.VarChar(150)
+  description           String?
+  unit                  String                  @default("piece") @db.VarChar(50)
+  is_active             Boolean                 @default(true)
+  created_at            DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime                @default(now()) @db.Timestamptz(6)
+  campaign_products     campaign_products[]
+  partner_contributions partner_contributions[]
+}
+
+model qr_codes {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  participant_id String       @unique @db.Uuid
+  qr_token       String       @unique @db.VarChar(255)
+  issued_at      DateTime     @default(now()) @db.Timestamptz(6)
+  revoked_at     DateTime?    @db.Timestamptz(6)
+  participants   participants @relation(fields: [participant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model questions {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assessment_id      String               @db.Uuid
+  prompt             String
+  type               question_type        @default(SINGLE_CHOICE)
+  order_index        Int
+  is_required        Boolean              @default(true)
+  answer_options     answer_options[]
+  assessment_answers assessment_answers[]
+  assessments        assessments          @relation(fields: [assessment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([assessment_id, order_index])
+  @@index([assessment_id], map: "questions_assessment_idx")
+}
+
+model students {
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  telegram_id         BigInt                @unique
+  telegram_username   String?               @db.VarChar(100)
+  first_name          String?               @db.VarChar(100)
+  last_name           String?               @db.VarChar(100)
+  phone               String?               @db.VarChar(30)
+  university_id       String?               @db.Uuid
+  status              student_status        @default(ACTIVE)
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime              @default(now()) @db.Timestamptz(6)
+  assessment_attempts assessment_attempts[]
+  participants        participants[]
+  universities        universities?         @relation(fields: [university_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([university_id], map: "students_university_idx")
+}
+
+model universities {
+  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String                    @unique @db.VarChar(200)
+  code                    String                    @unique @db.VarChar(50)
+  is_active               Boolean                   @default(true)
+  created_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  assessment_universities assessment_universities[]
+  students                students[]
+}
+
+model waiting_list {
+  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  participant_id String              @unique @db.Uuid
+  reason         String?
+  priority       Int                 @default(1)
+  status         waiting_list_status @default(WAITING)
+  added_at       DateTime            @default(now()) @db.Timestamptz(6)
+  resolved_at    DateTime?           @db.Timestamptz(6)
+  participants   participants        @relation(fields: [participant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+enum allocation_status {
+  PROPOSED
+  CONFIRMED
+  CANCELLED
+}
+
+enum assessment_result {
+  ELIGIBLE
+  NOT_ELIGIBLE
+  NEEDS_REVIEW
+}
+
+enum campaign_status {
+  DRAFT
+  UPCOMING
+  ACTIVE
+  PAUSED
+  REGISTRATION_CLOSED
+  DISTRIBUTION
+  COMPLETED
+  CANCELLED
+}
+
+enum contribution_delivery_status {
+  PENDING
+  PARTIALLY_DELIVERED
+  DELIVERED
+  CANCELLED
+}
+
+enum contribution_type {
+  PHYSICAL_PRODUCT
+  SUPPORT_THROUGH_PAYING_MANUFACTURER
+}
+
+enum distribution_status {
+  COMPLETED
+  CANCELLED
+}
+
+enum participant_status {
+  VERIFIED
+  WAITING_LIST
+  ALLOCATED
+  SUPPORTED
+  CANCELLED
+}
+
+enum question_type {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  NUMBER
+}
+
+enum student_status {
+  ACTIVE
+}
+
+enum waiting_list_status {
+  WAITING
+  ALLOCATED
+  REMOVED
+}

@@ -1,8 +1,9 @@
+
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 
-type AssessmentPageProps = {
+type NewQuestionPageProps = {
   params: Promise<{
     id: string
   }>
@@ -14,21 +15,73 @@ function isValidUUID(value: string) {
   )
 }
 
-function resultBadge(result: string) {
-  if (result === "ELIGIBLE") {
-    return "bg-emerald-50 text-emerald-700 ring-emerald-200"
+async function createQuestion(formData: FormData) {
+  "use server"
+
+  const assessmentId = String(formData.get("assessmentId") || "")
+  const prompt = String(formData.get("prompt") || "").trim()
+  const type = String(formData.get("type") || "SINGLE_CHOICE")
+  const isRequired = formData.get("isRequired") === "on"
+
+  if (!isValidUUID(assessmentId)) {
+    throw new Error("Invalid assessment ID.")
   }
 
-  if (result === "NOT_ELIGIBLE") {
-    return "bg-red-50 text-red-700 ring-red-200"
+  if (!prompt) {
+    throw new Error("Question text is required.")
   }
 
-  return "bg-amber-50 text-amber-700 ring-amber-200"
+  if (
+    type !== "SINGLE_CHOICE" &&
+    type !== "MULTIPLE_CHOICE" &&
+    type !== "NUMBER"
+  ) {
+    throw new Error("Invalid question type.")
+  }
+
+  const assessment = await prisma.assessments.findUnique({
+    where: {
+      id: assessmentId,
+    },
+    select: {
+      id: true,
+    },
+  })
+
+  if (!assessment) {
+    notFound()
+  }
+
+  const lastQuestion = await prisma.questions.findFirst({
+    where: {
+      assessment_id: assessmentId,
+    },
+    orderBy: {
+      order_index: "desc",
+    },
+    select: {
+      order_index: true,
+    },
+  })
+
+  const nextOrderIndex = (lastQuestion?.order_index ?? 0) + 1
+
+  await prisma.questions.create({
+    data: {
+      assessment_id: assessmentId,
+      prompt,
+      type,
+      order_index: nextOrderIndex,
+      is_required: isRequired,
+    },
+  })
+
+  redirect(`/dashboard/assessments/${assessmentId}`)
 }
 
-export default async function AssessmentPage({
+export default async function NewQuestionPage({
   params,
-}: AssessmentPageProps) {
+}: NewQuestionPageProps) {
   const { id } = await params
 
   if (!isValidUUID(id)) {
@@ -39,26 +92,10 @@ export default async function AssessmentPage({
     where: {
       id,
     },
-    include: {
-      questions: {
-        include: {
-          answer_options: {
-            orderBy: {
-              score_weight: "desc",
-            },
-          },
-        },
-        orderBy: {
-          order_index: "asc",
-        },
-      },
-      eligibility_rules: {
-        orderBy: {
-          priority: "asc",
-        },
-      },
-      campaigns: true,
-      assessment_attempts: true,
+    select: {
+      id: true,
+      title: true,
+      description: true,
     },
   })
 
@@ -71,340 +108,162 @@ export default async function AssessmentPage({
       <div className="p-6 md:p-8 lg:p-10">
 
         {/* Header */}
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <Link
-              href="/dashboard/assessments"
-              className="group inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900"
-            >
-              <span className="transition-transform group-hover:-translate-x-1">
-                ←
-              </span>
-              Back to Assessments
-            </Link>
+        <div className="mb-8">
+          <Link
+            href={`/dashboard/assessments/${assessment.id}`}
+            className="group inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900"
+          >
+            <span className="transition-transform group-hover:-translate-x-1">
+              ←
+            </span>
+            Back to Assessment
+          </Link>
 
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 ring-1 ring-inset ring-blue-200">
-                ASSESSMENT
-              </span>
+          <div className="mt-5">
+            <p className="text-xs font-bold uppercase tracking-wider text-blue-600">
+              Add Question
+            </p>
 
-              <span
-                className={`rounded-full px-3 py-1.5 text-xs font-bold ring-1 ring-inset ${
-                  assessment.is_active
-                    ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                    : "bg-slate-100 text-slate-500 ring-slate-200"
-                }`}
-              >
-                {assessment.is_active ? "ACTIVE" : "INACTIVE"}
-              </span>
-            </div>
-
-            <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
-              {assessment.title}
+            <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+              Create a New Question
             </h1>
 
-            {assessment.description && (
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500 md:text-base">
-                {assessment.description}
-              </p>
-            )}
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
+              Add a question that students will answer as part of the{" "}
+              <span className="font-semibold text-slate-700">
+                {assessment.title}
+              </span>{" "}
+              assessment.
+            </p>
           </div>
+        </div>
 
-          <Link
-            href={`/dashboard/assessments/${assessment.id}/questions/new`}
-            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 hover:shadow-md"
+        {/* Form */}
+        <div className="max-w-3xl">
+          <form
+            action={createQuestion}
+            className="rounded-2xl border border-slate-200 bg-white shadow-sm"
           >
-            + Add Question
-          </Link>
-        </div>
+            <input
+              type="hidden"
+              name="assessmentId"
+              value={assessment.id}
+            />
 
-        {/* Stats */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-7 p-6 md:p-8">
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Questions
-            </p>
-            <p className="mt-2 text-3xl font-bold text-slate-900">
-              {assessment.questions.length}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Answer Options
-            </p>
-            <p className="mt-2 text-3xl font-bold text-slate-900">
-              {assessment.questions.reduce(
-                (total, question) =>
-                  total + question.answer_options.length,
-                0
-              )}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Eligibility Rules
-            </p>
-            <p className="mt-2 text-3xl font-bold text-slate-900">
-              {assessment.eligibility_rules.length}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Campaigns
-            </p>
-            <p className="mt-2 text-3xl font-bold text-slate-900">
-              {assessment.campaigns.length}
-            </p>
-          </div>
-
-        </div>
-
-        {/* Questions */}
-        <section className="mt-8">
-          <div className="mb-4 flex items-end justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-slate-900">
-                Assessment Questions
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Configure the questions students will answer.
-              </p>
-            </div>
-
-            <Link
-              href={`/dashboard/assessments/${assessment.id}/questions/new`}
-              className="hidden text-sm font-semibold text-slate-700 hover:text-slate-950 sm:block"
-            >
-              + Add Question
-            </Link>
-          </div>
-
-          {assessment.questions.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
-              <p className="font-semibold text-slate-800">
-                No questions yet
-              </p>
-
-              <p className="mt-2 text-sm text-slate-500">
-                Add your first question to begin building this assessment.
-              </p>
-
-              <Link
-                href={`/dashboard/assessments/${assessment.id}/questions/new`}
-                className="mt-5 inline-flex rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
-              >
-                + Add First Question
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-5">
-              {assessment.questions.map((question, index) => (
-                <div
-                  key={question.id}
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+              {/* Question */}
+              <div>
+                <label
+                  htmlFor="prompt"
+                  className="block text-sm font-bold text-slate-800"
                 >
-                  <div className="flex flex-col gap-4 border-b border-slate-200 p-6 md:flex-row md:items-start md:justify-between">
-                    <div className="flex gap-4">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold text-white">
-                        {index + 1}
-                      </div>
+                  Question
+                </label>
 
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                          Question {index + 1}
-                        </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Write the question exactly as the student should see it.
+                </p>
 
-                        <h3 className="mt-1 text-base font-bold text-slate-900">
-                          {question.prompt}
-                        </h3>
+                <textarea
+                  id="prompt"
+                  name="prompt"
+                  rows={4}
+                  required
+                  placeholder="Example: What is your current level of study?"
+                  className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                />
+              </div>
 
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
-                            {question.type.replaceAll("_", " ")}
-                          </span>
+              {/* Question Type */}
+              <div>
+                <label
+                  htmlFor="type"
+                  className="block text-sm font-bold text-slate-800"
+                >
+                  Question Type
+                </label>
 
-                          {question.is_required && (
-                            <span className="rounded-md bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">
-                              Required
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                <p className="mt-1 text-sm text-slate-500">
+                  Choose how the student will answer this question.
+                </p>
 
-                    <Link
-                      href={`/dashboard/assessments/${assessment.id}/questions/${question.id}/options/new`}
-                      className="inline-flex shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
-                    >
-                      + Add Option
-                    </Link>
-                  </div>
+                <select
+                  id="type"
+                  name="type"
+                  defaultValue="SINGLE_CHOICE"
+                  className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                >
+                  <option value="SINGLE_CHOICE">
+                    Single Choice
+                  </option>
 
-                  {question.answer_options.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left">
-                        <thead className="bg-slate-50">
-                          <tr>
-                            <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-slate-400">
-                              Answer
-                            </th>
-                            <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-slate-400">
-                              Score
-                            </th>
-                            <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-slate-400">
-                              Type
-                            </th>
-                          </tr>
-                        </thead>
+                  <option value="MULTIPLE_CHOICE">
+                    Multiple Choice
+                  </option>
 
-                        <tbody className="divide-y divide-slate-100">
-                          {question.answer_options.map((option) => (
-                            <tr
-                              key={option.id}
-                              className="transition hover:bg-slate-50"
-                            >
-                              <td className="px-6 py-4 text-sm font-semibold text-slate-800">
-                                {option.label}
-                              </td>
+                  <option value="NUMBER">
+                    Number
+                  </option>
+                </select>
+              </div>
 
-                              <td className="px-6 py-4">
-                                <span className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600">
-                                  {option.score_weight} pts
-                                </span>
-                              </td>
+              {/* Required */}
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    name="isRequired"
+                    defaultChecked
+                    className="mt-1 h-4 w-4 rounded border-slate-300"
+                  />
 
-                              <td className="px-6 py-4">
-                                {option.is_disqualifier ? (
-                                  <span className="rounded-full bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 ring-1 ring-inset ring-red-200">
-                                    Disqualifier
-                                  </span>
-                                ) : (
-                                  <span className="text-xs font-medium text-slate-400">
-                                    Standard
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="px-6 py-6">
-                      <p className="text-sm text-slate-400">
-                        No answer options configured.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+                  <span>
+                    <span className="block text-sm font-bold text-slate-800">
+                      Required question
+                    </span>
 
-        {/* Eligibility Rules */}
-        <section className="mt-10">
-          <div className="mb-4 flex items-end justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-slate-900">
-                Eligibility Rules
-              </h2>
+                    <span className="mt-1 block text-sm text-slate-500">
+                      Students must answer this question before continuing.
+                    </span>
+                  </span>
+                </label>
+              </div>
 
-              <p className="mt-1 text-sm text-slate-500">
-                Define how assessment scores become eligibility results.
-              </p>
-            </div>
+              {/* Information */}
+              <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                <p className="text-sm font-semibold text-blue-900">
+                  Answer options
+                </p>
 
-            <Link
-              href={`/dashboard/assessments/${assessment.id}/rules/new`}
-              className="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-            >
-              + Add Rule
-            </Link>
-          </div>
-
-          {assessment.eligibility_rules.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
-              <p className="text-sm text-slate-500">
-                No eligibility rules configured yet.
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[700px] text-left">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400">
-                        Priority
-                      </th>
-
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400">
-                        Rule
-                      </th>
-
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400">
-                        Score Range
-                      </th>
-
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400">
-                        Result
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody className="divide-y divide-slate-100">
-                    {assessment.eligibility_rules.map((rule) => (
-                      <tr
-                        key={rule.id}
-                        className="transition hover:bg-slate-50"
-                      >
-                        <td className="px-6 py-4">
-                          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-600">
-                            {rule.priority}
-                          </span>
-                        </td>
-
-                        <td className="px-6 py-4">
-                          <p className="text-sm font-bold text-slate-800">
-                            {rule.name}
-                          </p>
-
-                          {rule.reason && (
-                            <p className="mt-1 max-w-md text-xs text-slate-400">
-                              {rule.reason}
-                            </p>
-                          )}
-                        </td>
-
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-600">
-                          {rule.minimum_score ?? "—"} →{" "}
-                          {rule.maximum_score ?? "—"}
-                        </td>
-
-                        <td className="px-6 py-4">
-                          <span
-                            className={`rounded-full px-3 py-1.5 text-xs font-bold ring-1 ring-inset ${resultBadge(
-                              rule.result
-                            )}`}
-                          >
-                            {rule.result.replaceAll("_", " ")}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <p className="mt-1 text-sm leading-6 text-blue-700">
+                  For Single Choice and Multiple Choice questions, you can add
+                  the answer options after creating the question.
+                </p>
               </div>
             </div>
-          )}
-        </section>
+
+            {/* Actions */}
+            <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50 p-6 sm:flex-row sm:justify-end">
+              <Link
+                href={`/dashboard/assessments/${assessment.id}`}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </Link>
+
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+              >
+                Create Question
+              </button>
+            </div>
+          </form>
+        </div>
 
       </div>
     </div>
   )
 }
+

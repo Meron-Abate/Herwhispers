@@ -55,7 +55,7 @@ export default async function VerificationPage() {
               </p>
 
               <p className="mt-1 text-lg font-semibold">
-                {participant.qr_codes.length}
+                {participant.qr_codes ? 1 : 0}
               </p>
             </div>
           </div>

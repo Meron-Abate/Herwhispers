@@ -66,6 +66,26 @@ export async function POST(
     const participantCode =
       `HW-${new Date().getFullYear()}-${Date.now()}`
 
+    const existingAttempt =
+      await prisma.assessment_attempts.findUnique({
+        where: {
+          student_id_campaign_id: {
+            student_id: studentId,
+            campaign_id: campaign.id,
+          },
+        },
+      })
+
+    const attempt =
+      existingAttempt ??
+      (await prisma.assessment_attempts.create({
+        data: {
+          assessment_id: campaign.assessment_id,
+          campaign_id: campaign.id,
+          student_id: studentId,
+        },
+      }))
+
     const participant =
       await prisma.participants.create({
         data: {
@@ -75,6 +95,8 @@ export async function POST(
           student_id: studentId,
 
           campaign_id: campaign.id,
+
+          assessment_attempt_id: attempt.id,
 
           status: "WAITING_LIST",
 

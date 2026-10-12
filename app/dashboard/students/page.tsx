@@ -29,13 +29,6 @@ export default async function StudentsPage() {
             )}
           </p>
         </div>
-
-        <Link
-          href="/dashboard/students/new"
-          className="rounded-lg bg-black px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
-        >
-          + New Student
-        </Link>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -96,7 +89,12 @@ export default async function StudentsPage() {
                       </span>
                       <div>
                         <p className="font-medium text-gray-900">
-                          {displayName}
+                          <Link
+                            href={`/dashboard/students/${student.id}`}
+                            className="hover:underline"
+                          >
+                            {displayName}
+                          </Link>
                         </p>
                         {!fullName && (
                           <p className="text-xs text-gray-400">

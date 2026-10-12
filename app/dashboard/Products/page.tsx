@@ -72,7 +72,12 @@ export default async function InventoryPage() {
                 <tr key={product.id} className="border-b last:border-b-0 hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div className="font-medium text-gray-900">
-                      {product.name}
+                      <Link
+                        href={`/dashboard/Products/${product.id}`}
+                        className="hover:underline"
+                      >
+                        {product.name}
+                      </Link>
                     </div>
 
                     {product.description && (

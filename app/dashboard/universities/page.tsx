@@ -63,7 +63,12 @@ export default async function UniversitiesPage() {
             {universities.map((university) => (
               <tr key={university.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                  {university.name}
+                  <Link
+                    href={`/dashboard/universities/${university.id}`}
+                    className="hover:underline"
+                  >
+                    {university.name}
+                  </Link>
                 </td>
 
                 <td className="px-6 py-4 text-sm text-gray-600">

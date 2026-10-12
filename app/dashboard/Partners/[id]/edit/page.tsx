@@ -9,10 +9,19 @@ type EditPartnerPageProps = {
   }>
 }
 
+
+function isValidUUID(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+}
+
 export default async function EditPartnerPage({
   params,
 }: EditPartnerPageProps) {
   const { id } = await params
+
+  if (!isValidUUID(id)) {
+    notFound()
+  }
 
   const partner = await prisma.partners.findUnique({
     where: { id },

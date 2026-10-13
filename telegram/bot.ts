@@ -1,4 +1,5 @@
-import { Bot, InlineKeyboard } from "grammy"
+import { Bot, InlineKeyboard, InputFile } from "grammy"
+import QRCode from "qrcode"
 
 import { prisma } from "@/lib/prisma"
 
@@ -342,8 +343,26 @@ bot.callbackQuery(
         completedParticipant &&
         completedParticipant.qr_codes
       ) {
-        await ctx.reply(
-          "Your registration for this campaign is already completed."
+        const qrBuffer = await QRCode.toBuffer(
+          completedParticipant.qr_codes.qr_token,
+          {
+            width: 400,
+            margin: 2,
+            errorCorrectionLevel: "H",
+          }
+        )
+
+        await ctx.replyWithPhoto(
+          new InputFile(
+            qrBuffer,
+            `herwhispers-${completedParticipant.participant_code}.png`
+          ),
+          {
+            caption:
+              `Your registration for this campaign is already completed.\n\n` +
+              `Participant Code: ${completedParticipant.participant_code}\n\n` +
+              `Here is your QR code for distribution.`,
+          }
         )
 
         return
@@ -1342,12 +1361,27 @@ async function finishRegistration(
       registration.result ===
       "ELIGIBLE"
     ) {
-      await ctx.reply(
-        `Your registration is complete.\n\nYou are eligible for menstrual product support.\n\nParticipant Code: ${registration.participant.participant_code}\n\nPlease keep this information safe. Your QR code will be used during distribution.`
+      const qrBuffer = await QRCode.toBuffer(
+        registration.qrCode.qr_token,
+        {
+          width: 400,
+          margin: 2,
+          errorCorrectionLevel: "H",
+        }
       )
 
-      await ctx.reply(
-        `Your QR code token is:\n${registration.qrCode.qr_token}`
+      await ctx.replyWithPhoto(
+        new InputFile(
+          qrBuffer,
+          `herwhispers-${registration.participant.participant_code}.png`
+        ),
+        {
+          caption:
+            `Your registration is complete.\n\n` +
+            `You are eligible for menstrual product support.\n\n` +
+            `Participant Code: ${registration.participant.participant_code}\n\n` +
+            `Please keep this QR code safe. Show it during distribution to receive your support.`,
+        }
       )
 
       return
@@ -1403,9 +1437,33 @@ async function finishRegistration(
       registration.result ===
       "ALREADY_REGISTERED"
     ) {
-      await ctx.reply(
-        "Your registration for this campaign is already completed."
-      )
+      if (registration.qrCode?.qr_token) {
+        const qrBuffer = await QRCode.toBuffer(
+          registration.qrCode.qr_token,
+          {
+            width: 400,
+            margin: 2,
+            errorCorrectionLevel: "H",
+          }
+        )
+
+        await ctx.replyWithPhoto(
+          new InputFile(
+            qrBuffer,
+            `herwhispers-${registration.participant.participant_code}.png`
+          ),
+          {
+            caption:
+              `Your registration for this campaign is already completed.\n\n` +
+              `Participant Code: ${registration.participant.participant_code}\n\n` +
+              `Here is your QR code for distribution.`,
+          }
+        )
+      } else {
+        await ctx.reply(
+          "Your registration for this campaign is already completed."
+        )
+      }
 
       return
     }

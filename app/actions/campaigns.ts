@@ -1,88 +1,99 @@
-"use server"
+"use server";
 
-import { prisma } from "@/lib/prisma"
-import { revalidatePath } from "next/cache"
+import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
-export async function createCampaign(formData: FormData) {
-  const name = String(formData.get("name") ?? "").trim()
-  const description = String(formData.get("description") ?? "").trim()
-  const assessmentId = String(formData.get("assessment_id") ?? "").trim()
+export type CampaignFormState = {
+  ok: boolean;
+  errors?: Record<string, string>;
+};
+
+export async function createCampaign(
+  prevState: CampaignFormState,
+  formData: FormData,
+): Promise<CampaignFormState> {
+  const name = String(formData.get("name") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const assessmentId = String(formData.get("assessment_id") ?? "").trim();
 
   const registrationStartValue = String(
-    formData.get("registration_start") ?? ""
-  )
-
+    formData.get("registration_start") ?? "",
+  ).trim();
   const registrationEndValue = String(
-    formData.get("registration_end") ?? ""
-  )
-
+    formData.get("registration_end") ?? "",
+  ).trim();
   const distributionDateValue = String(
-    formData.get("distribution_date") ?? ""
-  )
+    formData.get("distribution_date") ?? "",
+  ).trim();
 
-  if (!name) {
-    throw new Error("Campaign name is required.")
+  const errors: Record<string, string> = {};
+
+  // Required text fields
+  if (!name) errors.name = "Campaign name is required.";
+  if (!assessmentId) errors.assessment_id = "Assessment is required.";
+  if (!registrationStartValue)
+    errors.registration_start = "Registration start is required.";
+  if (!registrationEndValue)
+    errors.registration_end = "Registration end is required.";
+
+  // Parse dates
+  const registrationStart = registrationStartValue
+    ? new Date(registrationStartValue)
+    : null;
+  const registrationEnd = registrationEndValue
+    ? new Date(registrationEndValue)
+    : null;
+
+  if (registrationStart && Number.isNaN(registrationStart.getTime())) {
+    errors.registration_start = "Invalid registration start date.";
+  }
+  if (registrationEnd && Number.isNaN(registrationEnd.getTime())) {
+    errors.registration_end = "Invalid registration end date.";
   }
 
-  if (!assessmentId) {
-    throw new Error("Assessment is required.")
+  // Date ordering check
+  if (
+    registrationStart &&
+    registrationEnd &&
+    !errors.registration_start &&
+    !errors.registration_end &&
+    registrationEnd <= registrationStart
+  ) {
+    errors.registration_end =
+      "Registration end must be after registration start.";
   }
 
-  if (!registrationStartValue) {
-    throw new Error("Registration start is required.")
-  }
-
-  if (!registrationEndValue) {
-    throw new Error("Registration end is required.")
-  }
-
-  const registrationStart = new Date(registrationStartValue)
-  const registrationEnd = new Date(registrationEndValue)
-
-  if (Number.isNaN(registrationStart.getTime())) {
-    throw new Error("Invalid registration start date.")
-  }
-
-  if (Number.isNaN(registrationEnd.getTime())) {
-    throw new Error("Invalid registration end date.")
-  }
-
-  if (registrationEnd <= registrationStart) {
-    throw new Error(
-      "Registration end must be after registration start."
-    )
-  }
-
-  let distributionDate: Date | null = null
-
+  // Distribution date — optional
+  let distributionDate: Date | null = null;
   if (distributionDateValue) {
-    distributionDate = new Date(distributionDateValue)
-
+    distributionDate = new Date(distributionDateValue);
     if (Number.isNaN(distributionDate.getTime())) {
-      throw new Error("Invalid distribution date.")
+      errors.distribution_date = "Invalid distribution date.";
     }
   }
 
-  const now = new Date()
+  // If anything failed, return errors instead of throwing
+  if (Object.keys(errors).length > 0) {
+    return { ok: false, errors };
+  }
+
+  // ----- All valid from here -----
+
+  const now = new Date();
 
   const activeCampaign = await prisma.campaigns.findFirst({
-    where: {
-      status: "ACTIVE",
-    },
-  })
+    where: { status: "ACTIVE" },
+  });
 
-  let status: "DRAFT" | "UPCOMING" | "ACTIVE"
+  let status: "DRAFT" | "UPCOMING" | "ACTIVE";
 
-  if (
-    !activeCampaign &&
-    registrationStart <= now &&
-    registrationEnd >= now
-  ) {
-    status = "ACTIVE"
-  } else if (registrationStart > now) {
-    status = "UPCOMING"
+  if (!activeCampaign && registrationStart! <= now && registrationEnd! >= now) {
+    status = "ACTIVE";
+  } else if (registrationStart! > now) {
+    status = "UPCOMING";
   } else {
-    status = "DRAFT"
+    status = "DRAFT";
   }
 
   await prisma.campaigns.create({
@@ -90,96 +101,68 @@ export async function createCampaign(formData: FormData) {
       name,
       description: description || null,
       assessment_id: assessmentId,
-      registration_start: registrationStart,
-      registration_end: registrationEnd,
+      registration_start: registrationStart!,
+      registration_end: registrationEnd!,
       distribution_date: distributionDate,
       status,
     },
-  })
+  });
 
-  revalidatePath("/dashboard/campaigns")
-  revalidatePath("/dashboard")
+  revalidatePath("/dashboard/campaigns");
+  revalidatePath("/dashboard");
+  redirect("/dashboard/campaigns");
 }
 
-
 export async function completeCampaign(formData: FormData) {
-  const campaignId = String(
-    formData.get("campaignId") ?? ""
-  ).trim()
+  const campaignId = String(formData.get("campaignId") ?? "").trim();
 
   if (!campaignId) {
-    throw new Error("Campaign ID is required.")
+    throw new Error("Campaign ID is required.");
   }
 
   const campaign = await prisma.campaigns.findUnique({
-    where: {
-      id: campaignId,
-    },
-  })
+    where: { id: campaignId },
+  });
 
   if (!campaign) {
-    throw new Error("Campaign not found.")
+    throw new Error("Campaign not found.");
   }
 
   if (campaign.status === "COMPLETED") {
-    return
+    return;
   }
 
   await prisma.campaigns.update({
-    where: {
-      id: campaignId,
-    },
+    where: { id: campaignId },
     data: {
       status: "COMPLETED",
       updated_at: new Date(),
     },
-  })
+  });
 
-  const now = new Date()
+  const now = new Date();
 
-  /*
-   * Find the next campaign whose registration
-   * period is currently open.
-   */
   const nextCampaign = await prisma.campaigns.findFirst({
     where: {
-      id: {
-        not: campaignId,
-      },
-
-      status: {
-        in: ["UPCOMING", "DRAFT"],
-      },
-
-      registration_start: {
-        lte: now,
-      },
-
-      registration_end: {
-        gte: now,
-      },
+      id: { not: campaignId },
+      status: { in: ["UPCOMING", "DRAFT"] },
+      registration_start: { lte: now },
+      registration_end: { gte: now },
     },
-
-    orderBy: {
-      registration_start: "asc",
-    },
-  })
+    orderBy: { registration_start: "asc" },
+  });
 
   if (nextCampaign) {
     await prisma.campaigns.update({
-      where: {
-        id: nextCampaign.id,
-      },
-
+      where: { id: nextCampaign.id },
       data: {
         status: "ACTIVE",
         updated_at: new Date(),
       },
-    })
+    });
   }
 
-  revalidatePath("/dashboard/campaigns")
-  revalidatePath("/dashboard")
-
-    redirect("/dashboard/campaigns")
+  revalidatePath("/dashboard/campaigns");
+  revalidatePath("/dashboard");
+  redirect("/dashboard/campaigns");
 }

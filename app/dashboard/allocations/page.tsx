@@ -1,4 +1,8 @@
+import Link from "next/link"
 import { prisma } from "@/lib/prisma"
+import { approveAllocation } from "@/app/actions/allocations"
+
+export const dynamic = "force-dynamic"
 
 export default async function AllocationsPage() {
   const allocations =
@@ -48,14 +52,26 @@ export default async function AllocationsPage() {
             </span>
           </div>
 
-          <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
-            Product Allocations
-          </h1>
+          <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+                Product Allocations
+              </h1>
 
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
-            Review and manage product quantities allocated to eligible
-            HerWhispers participants.
-          </p>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
+                Review and manage product quantities allocated to eligible
+                HerWhispers participants.
+              </p>
+            </div>
+
+            <Link
+              href="/dashboard/equal-allocations"
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
+            >
+              <span aria-hidden="true">+</span>
+              New allocation
+            </Link>
+          </div>
         </div>
 
         {/* Stats */}
@@ -137,7 +153,7 @@ export default async function AllocationsPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[950px] text-left">
+              <table className="w-full min-w-[1050px] text-left">
 
                 <thead className="bg-slate-50">
                   <tr>
@@ -168,6 +184,10 @@ export default async function AllocationsPage() {
 
                     <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400">
                       Confirmed
+                    </th>
+
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Actions
                     </th>
 
                   </tr>
@@ -271,6 +291,34 @@ export default async function AllocationsPage() {
                           {allocation.confirmed_at
                             ? allocation.confirmed_at.toLocaleDateString()
                             : "Pending"}
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <Link
+                              href={`/dashboard/allocations/${allocation.id}`}
+                              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                            >
+                              View
+                            </Link>
+
+                            {allocation.status ===
+                              "PROPOSED" && (
+                              <form
+                                action={approveAllocation.bind(
+                                  null,
+                                  allocation.id
+                                )}
+                              >
+                                <button
+                                  type="submit"
+                                  className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-emerald-700"
+                                >
+                                  Approve
+                                </button>
+                              </form>
+                            )}
+                          </div>
                         </td>
 
                       </tr>

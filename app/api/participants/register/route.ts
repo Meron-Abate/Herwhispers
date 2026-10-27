@@ -1,6 +1,22 @@
+import { randomUUID } from "crypto"
+
 import { NextResponse } from "next/server"
+
 import { prisma } from "@/lib/prisma"
+
 import { getActiveCampaign } from "@/lib/campaigns"
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function generateParticipantCode() {
+  const year = new Date().getFullYear()
+
+  return `HW-${year}-${randomUUID()
+    .replace(/-/g, "")
+    .slice(0, 8)
+    .toUpperCase()}`
+}
 
 export async function POST(
   request: Request
@@ -16,6 +32,18 @@ export async function POST(
         {
           error:
             "studentId is required.",
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    if (!UUID_PATTERN.test(studentId)) {
+      return NextResponse.json(
+        {
+          error:
+            "studentId must be a valid student ID.",
         },
         {
           status: 400,
@@ -63,18 +91,42 @@ export async function POST(
       })
     }
 
-    const participantCode =
-      `HW-${new Date().getFullYear()}-${Date.now()}`
+    // participants.assessment_attempt_id is required
+    // and unique, so a participant can only exist once
+    // the student has an assessment attempt for the
+    // campaign.
+    const attempt =
+      await prisma.assessment_attempts.findFirst({
+        where: {
+          student_id: studentId,
+          campaign_id: campaign.id,
+        },
+      })
+
+    if (!attempt) {
+      return NextResponse.json(
+        {
+          error:
+            "The student has not started the assessment for this campaign.",
+        },
+        {
+          status: 404,
+        }
+      )
+    }
 
     const participant =
       await prisma.participants.create({
         data: {
           participant_code:
-            participantCode,
+            generateParticipantCode(),
 
           student_id: studentId,
 
           campaign_id: campaign.id,
+
+          assessment_attempt_id:
+            attempt.id,
 
           status: "WAITING_LIST",
 

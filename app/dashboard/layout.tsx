@@ -1,6 +1,14 @@
 import React from "react"
 import SidebarNav from "./SidebarNav"
 
+/*
+ * Every dashboard page reads live data from Postgres, so
+ * the whole segment is rendered per request. Without this,
+ * `next build` prerenders each page and exhausts the
+ * database connection pool.
+ */
+export const dynamic = "force-dynamic"
+
 export default function DashboardLayout({
   children,
 }: {

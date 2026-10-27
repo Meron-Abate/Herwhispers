@@ -166,6 +166,10 @@ export default async function AllocationsPage() {
                       Created
                     </th>
 
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Confirmed
+                    </th>
+
                   </tr>
                 </thead>
 
@@ -261,6 +265,12 @@ export default async function AllocationsPage() {
                         {/* Created */}
                         <td className="px-6 py-4 text-sm text-slate-500">
                           {allocation.created_at.toLocaleDateString()}
+                        </td>
+
+                        <td className="px-6 py-4 text-sm text-slate-500">
+                          {allocation.confirmed_at
+                            ? allocation.confirmed_at.toLocaleDateString()
+                            : "Pending"}
                         </td>
 
                       </tr>

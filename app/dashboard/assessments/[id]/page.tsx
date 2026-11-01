@@ -316,7 +316,7 @@ export default async function AssessmentPage({
 
             <div className="divide-y divide-slate-100">
 
-              {assessment.questions.map((question, index) => (
+              {assessment.questions.map((question) => (
 
                 <div
                   key={question.id}
@@ -330,13 +330,13 @@ export default async function AssessmentPage({
                     <div className="flex gap-4">
 
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold text-white">
-                        {String(index + 1).padStart(2, "0")}
+                        {String(question.order_index).padStart(2, "0")}
                       </div>
 
                       <div>
 
                         <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                          Question {index + 1}
+                          Question {question.order_index}
                         </p>
 
                         <h3 className="mt-1 text-base font-semibold leading-6 text-slate-900">
@@ -365,7 +365,6 @@ export default async function AssessmentPage({
 
                     </div>
 
-
                     {/* EDIT BUTTON */}
 
                     <Link
@@ -377,94 +376,67 @@ export default async function AssessmentPage({
 
                   </div>
 
-
                   {/* Answer Options */}
+                  {question.type === "SINGLE_CHOICE" || question.type === "MULTIPLE_CHOICE" ? (
+                    question.answer_options.length > 0 ? (
+                      <div className="mt-5 ml-0 lg:ml-14">
+                        <div className="mb-2 flex items-center justify-between">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            Answer Options
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            {question.answer_options.length} option
+                            {question.answer_options.length === 1 ? "" : "s"}
+                          </p>
+                        </div>
 
-                  {question.answer_options.length > 0 ? (
-
-                    <div className="mt-5 ml-0 lg:ml-14">
-
-                      <div className="mb-2 flex items-center justify-between">
-
-                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                          Answer Options
-                        </p>
-
-                        <p className="text-xs text-slate-400">
-                          {question.answer_options.length} option
-                          {question.answer_options.length === 1 ? "" : "s"}
-                        </p>
-
-                      </div>
-
-                      <div className="overflow-hidden rounded-xl border border-slate-200">
-
-                        {question.answer_options.map((option) => (
-
-                          <div
-                            key={option.id}
-                            className="flex items-center justify-between gap-4 border-b border-slate-100 bg-white px-4 py-3.5 last:border-b-0 transition hover:bg-slate-50"
-                          >
-
-                            <div className="flex min-w-0 items-center gap-3">
-
-                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-500">
-                                •
-                              </div>
-
-                              <span className="truncate text-sm font-medium text-slate-700">
-                                {option.label}
-                              </span>
-
-                              {option.is_disqualifier && (
-                                <span className="shrink-0 rounded-full bg-red-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-red-600">
-                                  Disqualifier
+                        <div className="overflow-hidden rounded-xl border border-slate-200">
+                          {question.answer_options.map((option) => (
+                            <div
+                              key={option.id}
+                              className="flex items-center justify-between gap-4 border-b border-slate-100 bg-white px-4 py-3.5 last:border-b-0 transition hover:bg-slate-50"
+                            >
+                              <div className="flex min-w-0 items-center gap-3">
+                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-500">
+                                  •
+                                </div>
+                                <span className="truncate text-sm font-medium text-slate-700">
+                                  {option.label}
                                 </span>
-                              )}
-
+                                {option.is_disqualifier && (
+                                  <span className="shrink-0 rounded-full bg-red-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-red-600">
+                                    Disqualifier
+                                  </span>
+                                )}
+                              </div>
+                              <div className="shrink-0 rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600">
+                                {option.score_weight} pts
+                              </div>
                             </div>
-
-                            <div className="shrink-0 rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600">
-                              {option.score_weight} pts
-                            </div>
-
-                          </div>
-
-                        ))}
-
+                          ))}
+                        </div>
                       </div>
-
-                    </div>
-
-                  ) : (
-
-                    <div className="mt-5 ml-0 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 lg:ml-14">
-
-                      <p className="text-sm text-slate-500">
-                        No answer options configured for this question.
-                      </p>
-
-                    </div>
-
-                  )}
-
+                    ) : (
+                      <div className="mt-5 ml-0 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 lg:ml-14">
+                        <p className="text-sm text-slate-500">
+                          No answer options configured for this question.
+                        </p>
+                      </div>
+                    )
+                  ) : null}
 
                   {/* Add Option */}
-
-                  <div className="mt-4 ml-0 lg:ml-14">
-
-                    <Link
-                      href={`/dashboard/assessments/${assessment.id}/questions/${question.id}/options/new`}
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 transition hover:text-slate-900"
-                    >
-                      <span className="text-base">
-                        +
-                      </span>
-
-                      Add Answer Option
-                    </Link>
-
-                  </div>
+                  {(question.type === "SINGLE_CHOICE" || question.type === "MULTIPLE_CHOICE") && (
+                    <div className="mt-4 ml-0 lg:ml-14">
+                      <Link
+                        href={`/dashboard/assessments/${assessment.id}/questions/${question.id}/options/new`}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 transition hover:text-slate-900"
+                      >
+                        <span className="text-base">+</span>
+                        Add Answer Option
+                      </Link>
+                    </div>
+                  )}
 
                 </div>
 
@@ -473,9 +445,7 @@ export default async function AssessmentPage({
             </div>
 
           )}
-
         </section>
-
 
         {/* ========================================= */}
         {/* ELIGIBILITY RULES */}
@@ -496,7 +466,7 @@ export default async function AssessmentPage({
                 </h2>
 
                 <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
-                  {assessment.eligibility_rules.length}
+                   {assessment.eligibility_rules.length}
                 </span>
 
               </div>

@@ -4,6 +4,7 @@ import React from "react";
 const navigation = [
   { name: "Dashboard", href: "/dashboard" },
   { name: "Campaigns", href: "/dashboard/campaigns" },
+  { name: "Contributions", href: "/dashboard/contributions" },
   { name: "Participants", href: "/dashboard/participants" },
   { name: "Students", href: "/dashboard/students" },
   { name: "Universities", href: "/dashboard/universities" },

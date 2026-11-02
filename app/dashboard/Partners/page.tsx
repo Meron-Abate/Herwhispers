@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 
 // Use a helper to safely display optional fields
 function displayValue(value: string | null | undefined) {
@@ -27,6 +28,14 @@ export default async function PartnersPage() {
             Manage organizations and companies supporting HerWhispers.
           </p>
         </div>
+
+        {/* button */}
+        <Link
+          href="/dashboard/partners/new"
+          className="rounded-lg bg-black px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
+        >
+          + Add Partner
+        </Link>
       </div>
 
       {/* Table Container */}

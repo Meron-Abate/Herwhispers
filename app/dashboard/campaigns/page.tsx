@@ -1,6 +1,6 @@
-import Link from "next/link"
-import { prisma } from "@/lib/prisma"
-import { completeCampaign } from "@/app/actions/campaigns"
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import CompleteCampaignButton from "./CompleteCampaignButton";
 
 export default async function CampaignsPage() {
   const campaigns = await prisma.campaigns.findMany({
@@ -11,16 +11,14 @@ export default async function CampaignsPage() {
     orderBy: {
       created_at: "desc",
     },
-  })
+  });
 
   return (
     <div className="p-8">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Campaigns
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">Campaigns</h1>
 
           <p className="mt-1 text-sm text-gray-500">
             Manage HerWhispers support campaigns.
@@ -56,13 +54,9 @@ export default async function CampaignsPage() {
                 Participants
               </th>
 
-              <th className="px-6 py-4 font-semibold text-gray-700">
-                Status
-              </th>
+              <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
 
-              <th className="px-6 py-4 font-semibold text-gray-700">
-                Action
-              </th>
+              <th className="px-6 py-4 font-semibold text-gray-700">Action</th>
             </tr>
           </thead>
 
@@ -89,17 +83,11 @@ export default async function CampaignsPage() {
 
                 {/* Registration */}
                 <td className="px-6 py-5 text-gray-600">
-                  <div>
-                    {campaign.registration_start.toLocaleString()}
-                  </div>
+                  <div>{campaign.registration_start.toLocaleString()}</div>
 
-                  <div className="my-1 text-xs text-gray-400">
-                    to
-                  </div>
+                  <div className="my-1 text-xs text-gray-400">to</div>
 
-                  <div>
-                    {campaign.registration_end.toLocaleString()}
-                  </div>
+                  <div>{campaign.registration_end.toLocaleString()}</div>
                 </td>
 
                 {/* Participants */}
@@ -114,14 +102,14 @@ export default async function CampaignsPage() {
                       campaign.status === "ACTIVE"
                         ? "bg-green-100 text-green-700"
                         : campaign.status === "COMPLETED"
-                        ? "bg-gray-100 text-gray-700"
-                        : campaign.status === "UPCOMING"
-                        ? "bg-blue-100 text-blue-700"
-                        : campaign.status === "PAUSED"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : campaign.status === "CANCELLED"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-gray-100 text-gray-700"
+                          ? "bg-gray-100 text-gray-700"
+                          : campaign.status === "UPCOMING"
+                            ? "bg-blue-100 text-blue-700"
+                            : campaign.status === "PAUSED"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : campaign.status === "CANCELLED"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-gray-100 text-gray-700"
                     }`}
                   >
                     {campaign.status}
@@ -129,27 +117,11 @@ export default async function CampaignsPage() {
                 </td>
 
                 {/* Action */}
-                <td className="px-6 py-5">
-                  {campaign.status === "ACTIVE" ? (
-                    <form action={completeCampaign}>
-                      <input
-                        type="hidden"
-                        name="campaignId"
-                        value={campaign.id}
-                      />
-
-                      <button
-                        type="submit"
-                        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-                      >
-                        Complete
-                      </button>
-                    </form>
-                  ) : (
-                    <span className="text-sm text-gray-400">
-                      —
-                    </span>
-                  )}
+                <td className="p-4">
+                  <CompleteCampaignButton
+                    campaignId={campaign.id}
+                    status={campaign.status}
+                  />
                 </td>
               </tr>
             ))}
@@ -168,5 +140,5 @@ export default async function CampaignsPage() {
         </table>
       </div>
     </div>
-  )
+  );
 }

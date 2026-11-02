@@ -113,24 +113,39 @@ export async function createCampaign(
   redirect("/dashboard/campaigns");
 }
 
-export async function completeCampaign(formData: FormData) {
+export type CompleteCampaignState = {
+  ok: boolean;
+  message?: string;
+};
+
+export async function completeCampaign(
+  prevState: CompleteCampaignState,
+  formData: FormData,
+): Promise<CompleteCampaignState> {
   const campaignId = String(formData.get("campaignId") ?? "").trim();
 
   if (!campaignId) {
-    throw new Error("Campaign ID is required.");
+    return { ok: false, message: "Campaign ID is required." };
   }
 
+  // 1. Fetch the campaign to check its status
   const campaign = await prisma.campaigns.findUnique({
     where: { id: campaignId },
   });
 
   if (!campaign) {
-    throw new Error("Campaign not found.");
+    return { ok: false, message: "Campaign not found." };
   }
 
-  if (campaign.status === "COMPLETED") {
-    return;
+  // 2. Guard: Only allow appropriate statuses to be completed
+  const allowedStatuses = ["ACTIVE", "UPCOMING", "DRAFT", "PAUSED"];
+  if (!allowedStatuses.includes(campaign.status)) {
+    return {
+      ok: false,
+      message: `Cannot complete a campaign with status ${campaign.status}.`,
+    };
   }
+
 
   await prisma.campaigns.update({
     where: { id: campaignId },
@@ -140,8 +155,8 @@ export async function completeCampaign(formData: FormData) {
     },
   });
 
+  // 4. Automatically promote the next eligible campaign to ACTIVE
   const now = new Date();
-
   const nextCampaign = await prisma.campaigns.findFirst({
     where: {
       id: { not: campaignId },
@@ -162,7 +177,9 @@ export async function completeCampaign(formData: FormData) {
     });
   }
 
+  // 5. Refresh the cached list
   revalidatePath("/dashboard/campaigns");
   revalidatePath("/dashboard");
-  redirect("/dashboard/campaigns");
+
+  return { ok: true, message: "Campaign completed successfully." };
 }

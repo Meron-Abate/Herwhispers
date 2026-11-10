@@ -16,7 +16,7 @@ export default async function UniversitiesPage() {
     <div className="p-8">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Universities
           </h1>
 
@@ -27,41 +27,41 @@ export default async function UniversitiesPage() {
 
         <Link
           href="/dashboard/universities/new"
-          className="rounded-lg bg-black px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
+          className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
         >
           + New University
         </Link>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-2xl border border-slate-200/70 bg-white shadow-sm">
         <table className="w-full">
-          <thead className="border-b bg-gray-50">
+          <thead className="border-b border-slate-100 bg-slate-50/80">
             <tr>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+              <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 University
               </th>
 
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+              <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Code
               </th>
 
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+              <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Students
               </th>
 
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+              <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Status
               </th>
 
-              <th className="px-6 py-4 text-right text-sm font-semibold text-gray-700">
+              <th className="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Actions
               </th>
             </tr>
           </thead>
 
-          <tbody className="divide-y">
+          <tbody className="divide-y divide-slate-100">
             {universities.map((university) => (
-              <tr key={university.id} className="hover:bg-gray-50">
+              <tr key={university.id} className="hover:bg-violet-50/40">
                 <td className="px-6 py-4 text-sm font-medium text-gray-900">
                   <Link
                     href={`/dashboard/universities/${university.id}`}

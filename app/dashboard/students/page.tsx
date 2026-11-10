@@ -16,14 +16,14 @@ export default async function StudentsPage() {
     <div className="p-8">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Students
           </h1>
 
           <p className="mt-1 text-sm text-gray-500">
             Manage registered students
             {students.length > 0 && (
-              <span className="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+              <span className="ml-2 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-500/20">
                 {students.length}
               </span>
             )}
@@ -81,7 +81,7 @@ export default async function StudentsPage() {
                 : "•"
 
               return (
-                <tr key={student.id} className="hover:bg-gray-50">
+                <tr key={student.id} className="hover:bg-violet-50/40">
                   <td className="px-6 py-4 text-sm">
                     <div className="flex items-center gap-3">
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
@@ -126,7 +126,7 @@ export default async function StudentsPage() {
                   </td>
 
                   <td className="px-6 py-4 text-sm">
-                    <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
                       {student.status}
                     </span>
                   </td>

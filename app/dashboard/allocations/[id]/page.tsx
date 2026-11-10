@@ -130,8 +130,8 @@ export default async function AllocationDetailPage({
   const distribution = allocation.distributions
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="p-6 md:p-8 lg:p-10">
+    <div>
+      <div className="p-8">
         <Link
           href="/dashboard/allocations"
           className="group inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"

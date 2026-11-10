@@ -29,10 +29,10 @@ created_at: "desc",
 })
 
   return (
-    <div className="p-4 sm:p-8">
+    <div className="p-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Campaigns</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Campaigns</h1>
           <p className="mt-1 text-sm text-gray-500">
             Manage HerWhispers support campaigns.
           </p>
@@ -40,15 +40,15 @@ created_at: "desc",
 
         <Link
           href="/dashboard/campaigns/new"
-          className="w-fit rounded-lg bg-black px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
+          className="w-fit rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
         >
           + New Campaign
         </Link>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-2xl border border-slate-200/70 bg-white shadow-sm">
         <table className="w-full min-w-[1100px] text-left text-sm">
-          <thead className="border-b bg-gray-50">
+          <thead className="border-b border-slate-100 bg-slate-50/80">
             <tr>
               <th className="px-6 py-4 font-semibold text-gray-700">Campaign</th>
               <th className="px-6 py-4 font-semibold text-gray-700">Assessment</th>
@@ -62,7 +62,7 @@ created_at: "desc",
 
           <tbody className="divide-y divide-gray-100">
             {campaigns.map((campaign) => (
-              <tr key={campaign.id} className="hover:bg-gray-50">
+              <tr key={campaign.id} className="hover:bg-violet-50/40">
                 <td className="px-6 py-5">
                   <div className="font-medium text-gray-900">{campaign.name}</div>
                   <div className="mt-1 max-w-xs text-xs text-gray-500">
@@ -130,7 +130,7 @@ created_at: "desc",
                   </p>
                   <Link
                     href="/dashboard/campaigns/new"
-                    className="mt-4 inline-block rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+                    className="mt-4 inline-block rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
                   >
                     Create Campaign
                   </Link>

@@ -15,17 +15,22 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f8f8fd] text-slate-900">
       <div className="flex min-h-screen">
         {/* Sidebar */}
         <aside className="flex w-60 shrink-0 flex-col bg-[#f2f3fb]">
-          <div className="px-6 pt-6 pb-2">
-            <p className="text-lg font-bold text-slate-900">
-              HerWhispers
-            </p>
-            <p className="text-xs text-slate-500">
-              Admin Dashboard
-            </p>
+          <div className="flex items-center gap-3 px-6 pt-6 pb-2">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-base font-bold text-white shadow-sm">
+              H
+            </span>
+            <div>
+              <p className="text-lg font-bold leading-tight tracking-tight text-slate-900">
+                HerWhispers
+              </p>
+              <p className="text-xs text-slate-500">
+                Admin Dashboard
+              </p>
+            </div>
           </div>
 
           <SidebarNav />
@@ -34,7 +39,7 @@ export default function DashboardLayout({
         {/* Main column */}
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Top bar */}
-          <header className="flex items-center justify-end gap-4 border-b border-slate-100 px-8 py-4">
+          <header className="flex items-center justify-end gap-4 border-b border-slate-200/70 bg-white/80 px-8 py-4 backdrop-blur">
             <button
               type="button"
               aria-label="Notifications"
@@ -82,7 +87,7 @@ export default function DashboardLayout({
           </header>
 
           {/* Page content */}
-          <main className="flex-1 overflow-y-auto bg-white">
+          <main className="flex-1 overflow-y-auto">
             {children}
           </main>
         </div>

@@ -63,7 +63,7 @@ export default async function UniversityDetailPage({
 
       <div className="mt-4 mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             {university.name}
           </h1>
 
@@ -74,7 +74,7 @@ export default async function UniversityDetailPage({
 
         <Link
           href={`/dashboard/universities/${university.id}/edit`}
-          className="rounded-lg bg-black px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
+          className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
         >
           Edit University
         </Link>
@@ -149,7 +149,7 @@ export default async function UniversityDetailPage({
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl border bg-white shadow-sm">
+      <div className="mt-4 rounded-2xl border border-slate-200/70 bg-white shadow-sm">
         <div className="border-b px-6 py-4">
           <h2 className="text-sm font-semibold text-gray-900">
             Enrolled Students
@@ -162,7 +162,7 @@ export default async function UniversityDetailPage({
           </p>
         ) : (
           <table className="w-full text-left text-sm">
-            <thead className="border-b bg-gray-50">
+            <thead className="border-b border-slate-100 bg-slate-50/80">
               <tr>
                 <th className="px-6 py-3 font-semibold text-gray-700">
                   Name
@@ -182,7 +182,7 @@ export default async function UniversityDetailPage({
               </tr>
             </thead>
 
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-slate-100">
               {university.students.map((student) => {
                 const fullName =
                   [student.first_name, student.last_name]
@@ -190,7 +190,7 @@ export default async function UniversityDetailPage({
                     .join(" ") || "Unnamed student"
 
                 return (
-                  <tr key={student.id} className="hover:bg-gray-50">
+                  <tr key={student.id} className="hover:bg-violet-50/40">
                     <td className="px-6 py-3">
                       <Link
                         href={`/dashboard/students/${student.id}`}
@@ -208,7 +208,7 @@ export default async function UniversityDetailPage({
                       {student.phone ?? "—"}
                     </td>
                     <td className="px-6 py-3">
-                      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
+                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
                         {student.status}
                       </span>
                     </td>

@@ -53,7 +53,7 @@ export default async function AssessmentsPage() {
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Assessments
           </h1>
 
@@ -64,7 +64,7 @@ export default async function AssessmentsPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm">
         {assessments.length === 0 ? (
           <div className="p-8 text-center">
             <h2 className="text-lg font-semibold text-gray-900">
@@ -77,7 +77,7 @@ export default async function AssessmentsPage() {
           </div>
         ) : (
           <table className="w-full">
-            <thead className="border-b bg-gray-50">
+            <thead className="border-b border-slate-100 bg-slate-50/80">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase text-gray-500">
                   Assessment
@@ -117,7 +117,7 @@ export default async function AssessmentsPage() {
               </tr>
             </thead>
 
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-slate-100">
               {assessments.map((assessment) => {
                 const counts = countsByAssessment.get(assessment.id) ?? {
                   eligible: 0,
@@ -126,7 +126,7 @@ export default async function AssessmentsPage() {
                 }
 
                 return (
-                  <tr key={assessment.id} className="hover:bg-gray-50">
+                  <tr key={assessment.id} className="hover:bg-violet-50/40">
                     <td className="px-6 py-4">
                       <div>
                         <p className="font-medium text-gray-900">
@@ -148,19 +148,19 @@ export default async function AssessmentsPage() {
                     </td>
 
                     <td className="px-6 py-4">
-                      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
                         {counts.eligible}
                       </span>
                     </td>
 
                     <td className="px-6 py-4">
-                      <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
+                      <span className="rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 ring-1 ring-inset ring-rose-600/20">
                         {counts.notEligible}
                       </span>
                     </td>
 
                     <td className="px-6 py-4">
-                      <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
+                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20">
                         {counts.needsReview}
                       </span>
                     </td>

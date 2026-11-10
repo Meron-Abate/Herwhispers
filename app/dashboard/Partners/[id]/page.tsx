@@ -67,7 +67,7 @@ export default async function PartnerDetailPage({
 
       <div className="mt-4 mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             {partner.company_name}
           </h1>
 
@@ -78,7 +78,7 @@ export default async function PartnerDetailPage({
 
         <Link
           href={`/dashboard/Partners/${partner.id}/edit`}
-          className="rounded-lg bg-black px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
+          className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
         >
           Edit Partner
         </Link>
@@ -143,7 +143,7 @@ export default async function PartnerDetailPage({
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl border bg-white shadow-sm">
+      <div className="mt-4 rounded-2xl border border-slate-200/70 bg-white shadow-sm">
         <div className="border-b px-6 py-4">
           <h2 className="text-sm font-semibold text-gray-900">
             Campaign Contributions
@@ -156,7 +156,7 @@ export default async function PartnerDetailPage({
           </p>
         ) : (
           <table className="w-full text-left text-sm">
-            <thead className="border-b bg-gray-50">
+            <thead className="border-b border-slate-100 bg-slate-50/80">
               <tr>
                 <th className="px-6 py-3 font-semibold text-gray-700">
                   Product
@@ -179,9 +179,9 @@ export default async function PartnerDetailPage({
               </tr>
             </thead>
 
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-slate-100">
               {partner.partner_contributions.map((contribution) => (
-                <tr key={contribution.id} className="hover:bg-gray-50">
+                <tr key={contribution.id} className="hover:bg-violet-50/40">
                   <td className="px-6 py-3 font-medium text-gray-900">
                     {contribution.products.name}
                   </td>

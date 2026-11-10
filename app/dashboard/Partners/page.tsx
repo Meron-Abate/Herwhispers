@@ -23,16 +23,16 @@ export default async function PartnersPage() {
 
         <Link
           href="/dashboard/Partners/new"
-          className="rounded-lg bg-black px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
+          className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
         >
           + New Partner
         </Link>
       </div>
 
-      <div className="rounded-xl border bg-white shadow-sm">
+      <div className="rounded-2xl border border-slate-200/70 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="border-b bg-gray-50">
+            <thead className="border-b border-slate-100 bg-slate-50/80">
               <tr>
                 <th className="px-6 py-4 font-semibold text-gray-700">
                   Company
@@ -56,9 +56,9 @@ export default async function PartnersPage() {
               </tr>
             </thead>
 
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-slate-100">
               {partners.map((partner) => (
-                <tr key={partner.id} className="border-b last:border-b-0 hover:bg-gray-50">
+                <tr key={partner.id} className="border-b last:border-b-0 hover:bg-violet-50/40">
                   <td className="px-6 py-4">
                     <div className="font-medium text-gray-900">
                       <Link

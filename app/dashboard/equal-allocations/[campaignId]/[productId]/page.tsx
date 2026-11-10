@@ -64,13 +64,13 @@ export default async function EqualAllocationPage({
       <div className="mb-8">
         <Link
           href="/dashboard/allocations"
-          className="rounded-lg bg-black px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
+          className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
         >
           ← Back to Allocations
         </Link>
       </div>
 
-      <div className="rounded-xl border bg-white shadow-sm">
+      <div className="rounded-2xl border border-slate-200/70 bg-white shadow-sm">
         <div className="border-b p-6">
           <h2 className="text-xl font-semibold text-gray-900">
             Equal Allocation
@@ -96,7 +96,7 @@ export default async function EqualAllocationPage({
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
               Delivered contributions
             </p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">
+            <p className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
               {preview.contributedQuantity}
             </p>
           </div>
@@ -105,7 +105,7 @@ export default async function EqualAllocationPage({
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
               Already allocated
             </p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">
+            <p className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
               {preview.allocatedQuantity}
             </p>
           </div>
@@ -114,7 +114,7 @@ export default async function EqualAllocationPage({
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
               Available
             </p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">
+            <p className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
               {preview.availableQuantity}
             </p>
           </div>
@@ -196,7 +196,7 @@ export default async function EqualAllocationPage({
             >
               <button
                 type="submit"
-                className="w-full rounded-lg bg-black px-4 py-3 text-sm font-medium text-white hover:opacity-90"
+                className="w-full rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
               >
                 Allocate Equally Among{" "}
                 {preview.eligibleParticipantCount} Participants

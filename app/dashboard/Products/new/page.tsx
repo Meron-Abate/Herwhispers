@@ -12,7 +12,7 @@ export default function NewProductPage() {
           ← Back to Products
         </Link>
 
-        <h1 className="mt-4 text-2xl font-bold text-gray-900">
+        <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
           Add Product
         </h1>
 
@@ -96,7 +96,7 @@ export default function NewProductPage() {
 
         <button
           type="submit"
-          className="w-full rounded-lg bg-black px-4 py-3 text-sm font-medium text-white hover:opacity-90"
+          className="w-full rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
         >
           Add Product
         </button>

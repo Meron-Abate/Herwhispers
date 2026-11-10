@@ -26,13 +26,13 @@ export default async function DistributionsPage() {
     <div className="p-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <PageHeader
-          title="Distributions"
-          description="Track product distributions"
+          title="Supported Students"
+          description="Students who have received their products, with what they got and when"
         />
 
         <div className="flex gap-3">
           <div className="rounded-2xl border border-slate-200/70 bg-white px-5 py-3 shadow-sm">
-            <p className="text-xs font-medium text-slate-500">Records</p>
+            <p className="text-xs font-medium text-slate-500">Times supported</p>
             <p className="text-xl font-bold text-slate-900">
               {distributions.length}
             </p>
@@ -40,7 +40,7 @@ export default async function DistributionsPage() {
 
           <div className="rounded-2xl border border-slate-200/70 bg-white px-5 py-3 shadow-sm">
             <p className="text-xs font-medium text-slate-500">
-              Products given
+              Products handed out
             </p>
             <p className="text-xl font-bold text-violet-600">
               {totalQuantity}
@@ -60,7 +60,10 @@ export default async function DistributionsPage() {
                 Campaign
               </th>
               <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Quantity
+                Products received
+              </th>
+              <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Date
               </th>
               <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Status
@@ -97,6 +100,14 @@ export default async function DistributionsPage() {
                     {distribution.quantity ?? "—"}
                   </td>
 
+                  <td className="px-6 py-4 text-sm text-slate-500">
+                    {distribution.distributed_at.toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </td>
+
                   <td className="px-6 py-4">
                     <StatusBadge status={distribution.status} />
                   </td>
@@ -107,10 +118,10 @@ export default async function DistributionsPage() {
             {distributions.length === 0 && (
               <tr>
                 <td
-                  colSpan={4}
+                  colSpan={5}
                   className="px-6 py-12 text-center text-sm text-slate-500"
                 >
-                  No distributions found.
+                  No one has received products yet.
                 </td>
               </tr>
             )}

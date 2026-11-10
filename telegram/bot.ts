@@ -86,6 +86,14 @@ const studentCache = new Map<
   }
 >()
 
+/**
+ * A student deleted from the dashboard must be created again on their
+ * next visit, so entry points drop the cached record first.
+ */
+function forgetStudent(telegramId: number) {
+  studentCache.delete(String(telegramId))
+}
+
 async function getOrCreateStudent(data: { telegramId: bigint }) {
   const key = data.telegramId.toString()
   const cached = studentCache.get(key)
@@ -334,6 +342,7 @@ bot.command(
   "start",
   async (ctx) => {
     if (ctx.from) {
+      forgetStudent(ctx.from.id)
       await clearBotState(BigInt(ctx.from.id))
     }
 
@@ -628,6 +637,8 @@ bot.callbackQuery(
       // Ignore old Telegram callbacks.
     }
 
+    forgetStudent(ctx.from.id)
+
     try {
       /*
       |--------------------------------------------------------------------------
@@ -799,6 +810,8 @@ bot.callbackQuery(
     } catch {
       // Ignore old Telegram callbacks.
     }
+
+    forgetStudent(ctx.from.id)
 
     try {
       const telegramId =

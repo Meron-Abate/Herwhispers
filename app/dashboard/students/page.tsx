@@ -57,7 +57,9 @@ export default async function StudentsPage() {
                 </td>
 
                 <td className="px-6 py-4 text-sm">
-                  {student.email ?? "—"}
+                  {student.telegram_username
+                    ? `@${student.telegram_username}`
+                    : student.phone ?? "—"}
                 </td>
 
                 <td className="px-6 py-4 text-sm">

@@ -1,6 +1,22 @@
+import { randomUUID } from "crypto"
+
 import { NextResponse } from "next/server"
+
 import { prisma } from "@/lib/prisma"
+
 import { getActiveCampaign } from "@/lib/campaigns"
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function generateParticipantCode() {
+  const year = new Date().getFullYear()
+
+  return `HW-${year}-${randomUUID()
+    .replace(/-/g, "")
+    .slice(0, 8)
+    .toUpperCase()}`
+}
 
 export async function POST(
   request: Request
@@ -16,6 +32,18 @@ export async function POST(
         {
           error:
             "studentId is required.",
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    if (!UUID_PATTERN.test(studentId)) {
+      return NextResponse.json(
+        {
+          error:
+            "studentId must be a valid student ID.",
         },
         {
           status: 400,
@@ -63,9 +91,6 @@ export async function POST(
       })
     }
 
-    const participantCode =
-      `HW-${new Date().getFullYear()}-${Date.now()}`
-
     const existingAttempt =
       await prisma.assessment_attempts.findUnique({
         where: {
@@ -90,7 +115,7 @@ export async function POST(
       await prisma.participants.create({
         data: {
           participant_code:
-            participantCode,
+            generateParticipantCode(),
 
           student_id: studentId,
 

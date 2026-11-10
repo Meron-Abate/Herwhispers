@@ -33,25 +33,73 @@ export async function updateStudent(formData: FormData) {
   redirect("/dashboard/students")
 }
 
-export async function deleteStudent(formData: FormData) {
-  const id = String(formData.get("id") ?? "").trim()
+export type DeleteStudentResult = {
+  ok: boolean
+  error?: string
+}
 
+/**
+ * Removes a student together with their assessment attempts, answers,
+ * participation and QR code, so they can register again from scratch.
+ * Students who have been allocated or given products are kept: deleting
+ * them would remove stock records.
+ */
+export async function removeStudent(
+  id: string
+): Promise<DeleteStudentResult> {
   if (!id) {
-    throw new Error("Student ID is required.")
+    return { ok: false, error: "Student ID is required." }
   }
 
-  const [attempts, participants] = await Promise.all([
-    prisma.assessment_attempts.count({ where: { student_id: id } }),
-    prisma.participants.count({ where: { student_id: id } }),
-  ])
+  const participants = await prisma.participants.findMany({
+    where: { student_id: id },
+    select: { id: true },
+  })
 
-  if (attempts > 0 || participants > 0) {
-    throw new Error(
-      "Cannot delete this student because they have assessment attempts or campaign participation records."
-    )
+  const participantIds = participants.map((participant) => participant.id)
+
+  if (participantIds.length > 0) {
+    const [allocations, distributions] = await Promise.all([
+      prisma.allocations.count({
+        where: { participant_id: { in: participantIds } },
+      }),
+      prisma.distributions.count({
+        where: { participant_id: { in: participantIds } },
+      }),
+    ])
+
+    if (allocations > 0 || distributions > 0) {
+      return {
+        ok: false,
+        error:
+          "This student has been allocated or given products, so they can't be deleted.",
+      }
+    }
   }
 
-  await prisma.students.delete({ where: { id } })
+  try {
+    await prisma.$transaction([
+      prisma.qr_codes.deleteMany({
+        where: { participant_id: { in: participantIds } },
+      }),
+      prisma.waiting_list.deleteMany({
+        where: { participant_id: { in: participantIds } },
+      }),
+      prisma.participants.deleteMany({ where: { student_id: id } }),
+      prisma.assessment_answers.deleteMany({
+        where: { assessment_attempts: { student_id: id } },
+      }),
+      prisma.assessment_attempts.deleteMany({ where: { student_id: id } }),
+      prisma.students.delete({ where: { id } }),
+    ])
+  } catch (error) {
+    console.error("STUDENT DELETE ERROR:", error)
+
+    return { ok: false, error: "Could not delete the student." }
+  }
 
   revalidatePath("/dashboard/students")
+  revalidatePath("/dashboard/participants")
+
+  return { ok: true }
 }

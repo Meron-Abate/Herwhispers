@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
+import DeleteStudentButton from "../DeleteStudentButton"
 
 type StudentDetailPageProps = {
   params: Promise<{
@@ -80,12 +81,21 @@ export default async function StudentDetailPage({
           </p>
         </div>
 
-        <Link
-          href={`/dashboard/students/${student.id}/edit`}
-          className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
-        >
-          Edit Student
-        </Link>
+        <div className="flex items-start gap-3">
+          <DeleteStudentButton
+            studentId={student.id}
+            studentName={fullName}
+            redirectTo="/dashboard/students"
+            className="rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
+          />
+
+          <Link
+            href={`/dashboard/students/${student.id}/edit`}
+            className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
+          >
+            Edit Student
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

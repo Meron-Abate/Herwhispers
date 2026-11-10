@@ -2,6 +2,8 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import EditQuestionForm from "./EditQuestionForm"
+import OptionsEditor from "./OptionsEditor"
+import DeleteQuestionButton from "../../../DeleteQuestionButton"
 
 type EditQuestionPageProps = {
   params: Promise<{
@@ -29,6 +31,11 @@ export default async function EditQuestionPage({
     where: {
       id: questionId,
       assessment_id: id,
+    },
+    include: {
+      answer_options: {
+        orderBy: { label: "asc" },
+      },
     },
   })
 
@@ -67,7 +74,38 @@ export default async function EditQuestionPage({
     is_required: question.is_required,
     order_index: question.order_index,
   }}
-/>      </div>
+/>
+
+        {question.type !== "NUMBER" && (
+          <OptionsEditor
+            assessmentId={id}
+            questionId={question.id}
+            options={question.answer_options.map((option) => ({
+              id: option.id,
+              label: option.label,
+              score_weight: option.score_weight,
+              is_disqualifier: option.is_disqualifier,
+            }))}
+          />
+        )}
+
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-rose-200 bg-rose-50/50 p-6">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900">
+              Delete this question
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Removes the question and its answer options. Questions that
+              students have already answered can't be deleted.
+            </p>
+          </div>
+
+          <DeleteQuestionButton
+            questionId={question.id}
+            redirectTo={`/dashboard/assessments/${id}`}
+          />
+        </div>
+      </div>
     </main>
   )
 }

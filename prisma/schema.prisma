@@ -103,13 +103,14 @@ model assessments {
 }
 
 model campaign_products {
-  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  campaign_id      String            @db.Uuid
-  product_id       String            @db.Uuid
-  allocation_rules allocation_rules?
-  allocations      allocations[]
-  campaigns        campaigns         @relation(fields: [campaign_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  products         products          @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaign_id       String            @db.Uuid
+  product_id        String            @db.Uuid
+  assigned_quantity Int               @default(0)
+  allocation_rules  allocation_rules?
+  allocations       allocations[]
+  campaigns         campaigns         @relation(fields: [campaign_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products          products          @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([campaign_id, product_id])
 }
@@ -193,7 +194,7 @@ model participants {
 model partner_contributions {
   id                String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   partner_id        String                       @db.Uuid
-  campaign_id       String                       @db.Uuid
+  campaign_id       String?                      @db.Uuid
   product_id        String                       @db.Uuid
   contribution_type contribution_type
   quantity          Int
@@ -203,7 +204,7 @@ model partner_contributions {
   notes             String?
   created_at        DateTime                     @default(now()) @db.Timestamptz(6)
   updated_at        DateTime                     @default(now()) @db.Timestamptz(6)
-  campaigns         campaigns                    @relation(fields: [campaign_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  campaigns         campaigns?                   @relation(fields: [campaign_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   partners          partners                     @relation(fields: [partner_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   products          products                     @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -230,6 +231,7 @@ model products {
   name                  String                  @db.VarChar(150)
   description           String?
   unit                  String                  @default("piece") @db.VarChar(50)
+  category              product_category        @default(OTHER)
   is_active             Boolean                 @default(true)
   created_at            DateTime                @default(now()) @db.Timestamptz(6)
   updated_at            DateTime                @default(now()) @db.Timestamptz(6)
@@ -443,4 +445,11 @@ enum anonymous_story_status {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum product_category {
+  DISPOSABLE_PAD
+  REUSABLE_PAD
+  TAMPON
+  OTHER
 }

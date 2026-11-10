@@ -1,6 +1,10 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { approveAllocation } from "@/app/actions/allocations"
+import CategoryBadge from "@/app/dashboard/CategoryBadge"
+import { getInventory } from "@/lib/inventory"
+import AssignStockForm from "@/app/dashboard/Products/AssignStockForm"
+import AssignmentRow from "@/app/dashboard/Products/AssignmentRow"
 
 export const dynamic = "force-dynamic"
 
@@ -24,6 +28,21 @@ export default async function AllocationsPage() {
         created_at: "desc",
       },
     })
+
+  const [{ categories, assignments }, campaigns] = await Promise.all([
+    getInventory(),
+    prisma.campaigns.findMany({
+      select: { id: true, name: true },
+      orderBy: { created_at: "desc" },
+    }),
+  ])
+
+  const unassigned = Object.fromEntries(
+    categories.map((stock) => [stock.category, stock.unassigned])
+  ) as Record<
+    "DISPOSABLE_PAD" | "REUSABLE_PAD" | "TAMPON" | "OTHER",
+    number
+  >
 
   const proposedCount = allocations.filter(
     (allocation) =>
@@ -71,6 +90,80 @@ export default async function AllocationsPage() {
               <span aria-hidden="true">+</span>
               New allocation
             </Link>
+          </div>
+        </div>
+
+        {/* Step 1: give a campaign its share of the inventory */}
+        <div className="mt-8">
+          <AssignStockForm campaigns={campaigns} unassigned={unassigned} />
+
+          <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200/70 bg-white shadow-sm">
+            <div className="border-b border-slate-100 px-6 py-4">
+              <h2 className="text-lg font-semibold text-slate-900">
+                Stock assigned to campaigns
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                You can't assign more than the inventory holds. Change a
+                number and press Save to adjust a campaign's share.
+              </p>
+            </div>
+
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-slate-100 bg-slate-50/80">
+                <tr>
+                  {["Campaign", "Category", "Assigned", "Given to participants", "Left"].map(
+                    (heading) => (
+                      <th
+                        key={heading}
+                        className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                      >
+                        {heading}
+                      </th>
+                    )
+                  )}
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-slate-100">
+                {assignments.map((row) => (
+                  <tr
+                    key={row.campaignProductId}
+                    className="transition hover:bg-violet-50/40"
+                  >
+                    <td className="px-6 py-4 font-medium text-slate-900">
+                      {row.campaignName}
+                    </td>
+                    <td className="px-6 py-4">
+                      <CategoryBadge category={row.category} />
+                    </td>
+                    <td className="px-6 py-4">
+                      <AssignmentRow
+                        campaignProductId={row.campaignProductId}
+                        assigned={row.assigned}
+                        allocated={row.allocated}
+                      />
+                    </td>
+                    <td className="px-6 py-4 text-slate-600">
+                      {row.allocated}
+                    </td>
+                    <td className="px-6 py-4 font-semibold text-slate-900">
+                      {Math.max(row.assigned - row.allocated, 0)}
+                    </td>
+                  </tr>
+                ))}
+
+                {assignments.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-6 py-10 text-center text-sm text-slate-500"
+                    >
+                      No campaign has been given any stock yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -246,14 +339,22 @@ export default async function AllocationsPage() {
                             }
                           </p>
 
-                          <p className="mt-1 text-xs text-slate-400">
-                            {
-                              allocation
-                                .campaign_products
-                                .products
-                                .unit
-                            }
-                          </p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <CategoryBadge
+                              category={
+                                allocation.campaign_products.products
+                                  .category
+                              }
+                            />
+                            <span className="text-xs text-slate-400">
+                              {
+                                allocation
+                                  .campaign_products
+                                  .products
+                                  .unit
+                              }
+                            </span>
+                          </div>
                         </td>
 
                         {/* Quantity */}

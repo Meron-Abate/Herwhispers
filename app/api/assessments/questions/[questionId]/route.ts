@@ -136,11 +136,76 @@ export async function DELETE(
       )
     }
 
-    await prisma.questions.delete({
+    const question = await prisma.questions.findUnique({
       where: {
         id: questionId,
       },
     })
+
+    if (!question) {
+      return NextResponse.json(
+        {
+          error: "Question not found.",
+        },
+        {
+          status: 404,
+        }
+      )
+    }
+
+    // Students' recorded answers point at this question, so removing
+    // it would break their results.
+    const answers = await prisma.assessment_answers.count({
+      where: {
+        question_id: questionId,
+      },
+    })
+
+    if (answers > 0) {
+      return NextResponse.json(
+        {
+          error: `Students have already answered this question (${answers} answer${
+            answers === 1 ? "" : "s"
+          }), so it can't be deleted. Edit it instead.`,
+        },
+        {
+          status: 409,
+        }
+      )
+    }
+
+    // Close the gap in the numbering so questions stay 1..n. Moving
+    // them in ascending order never collides with the unique
+    // (assessment_id, order_index) constraint.
+    const later = await prisma.questions.findMany({
+      where: {
+        assessment_id: question.assessment_id,
+        order_index: {
+          gt: question.order_index,
+        },
+      },
+      orderBy: {
+        order_index: "asc",
+      },
+    })
+
+    await prisma.$transaction([
+      prisma.questions.delete({
+        where: {
+          id: questionId,
+        },
+      }),
+      ...later.map((item) =>
+        prisma.questions.update({
+          where: {
+            id: item.id,
+          },
+          data: {
+            order_index: item.order_index - 1,
+          },
+        })
+      ),
+    ])
 
     return NextResponse.json({
       success: true,

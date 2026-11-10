@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
+import CategoryBadge from "@/app/dashboard/CategoryBadge"
 
 type PartnerDetailPageProps = {
   params: Promise<{
@@ -76,12 +77,21 @@ export default async function PartnerDetailPage({
           </p>
         </div>
 
-        <Link
-          href={`/dashboard/Partners/${partner.id}/edit`}
-          className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
-        >
-          Edit Partner
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href={`/dashboard/contributions/new?partner=${partner.id}`}
+            className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
+          >
+            + Record donation
+          </Link>
+
+          <Link
+            href={`/dashboard/Partners/${partner.id}/edit`}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            Edit Partner
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -159,7 +169,7 @@ export default async function PartnerDetailPage({
             <thead className="border-b border-slate-100 bg-slate-50/80">
               <tr>
                 <th className="px-6 py-3 font-semibold text-gray-700">
-                  Product
+                  Category
                 </th>
                 <th className="px-6 py-3 font-semibold text-gray-700">
                   Campaign
@@ -183,10 +193,10 @@ export default async function PartnerDetailPage({
               {partner.partner_contributions.map((contribution) => (
                 <tr key={contribution.id} className="hover:bg-violet-50/40">
                   <td className="px-6 py-3 font-medium text-gray-900">
-                    {contribution.products.name}
+                    <CategoryBadge category={contribution.products.category} />
                   </td>
                   <td className="px-6 py-3 text-gray-700">
-                    {contribution.campaigns.name}
+                    {contribution.campaigns?.name ?? "Shared pool"}
                   </td>
                   <td className="px-6 py-3 text-gray-700">
                     {contribution.quantity.toLocaleString()}

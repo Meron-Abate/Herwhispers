@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { getEqualAllocationPreview } from "@/lib/allocations"
+import CategoryBadge from "@/app/dashboard/CategoryBadge"
 
 export const dynamic = "force-dynamic"
 
@@ -125,9 +126,14 @@ export default async function EqualAllocationIndexPage() {
                             {campaignProduct.products.name}
                           </p>
 
-                          <p className="mt-1 text-xs text-slate-400">
-                            {campaignProduct.products.unit}
-                          </p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <CategoryBadge
+                              category={campaignProduct.products.category}
+                            />
+                            <span className="text-xs text-slate-400">
+                              {campaignProduct.products.unit}
+                            </span>
+                          </div>
                         </td>
 
                         <td className="px-6 py-4 text-sm text-slate-600">

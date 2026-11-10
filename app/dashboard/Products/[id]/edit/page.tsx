@@ -2,6 +2,10 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { updateProduct } from "@/app/actions/products"
+import {
+  PRODUCT_CATEGORIES,
+  PRODUCT_CATEGORY_LABELS,
+} from "@/lib/productCategories"
 
 type EditProductPageProps = {
   params: Promise<{
@@ -88,6 +92,28 @@ export default async function EditProductPage({
             defaultValue={product.description ?? ""}
             className="w-full rounded-lg border px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2"
           />
+        </div>
+
+        <div>
+          <label
+            htmlFor="category"
+            className="mb-2 block text-sm font-medium text-gray-700"
+          >
+            Category
+          </label>
+
+          <select
+            id="category"
+            name="category"
+            defaultValue={product.category}
+            className="w-full rounded-lg border bg-white px-4 py-3 text-sm text-gray-900"
+          >
+            {PRODUCT_CATEGORIES.map((category) => (
+              <option key={category} value={category}>
+                {PRODUCT_CATEGORY_LABELS[category]}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>

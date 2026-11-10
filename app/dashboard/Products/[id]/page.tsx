@@ -204,7 +204,7 @@ export default async function ProductDetailPage({
                     {contribution.partners.company_name}
                   </td>
                   <td className="px-6 py-3 text-gray-700">
-                    {contribution.campaigns.name}
+                    {contribution.campaigns?.name ?? "Shared pool"}
                   </td>
                   <td className="px-6 py-3 text-gray-700">
                     {contribution.quantity.toLocaleString()}{" "}

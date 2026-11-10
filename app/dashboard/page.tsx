@@ -477,7 +477,7 @@ export default async function DashboardPage() {
               },
               {
                 href: "/dashboard/distributions",
-                label: "View Distributions",
+                label: "View Supported Students",
                 chip: "bg-blue-100 text-blue-600",
                 tint: "bg-blue-50 hover:bg-blue-100",
                 glyph: (

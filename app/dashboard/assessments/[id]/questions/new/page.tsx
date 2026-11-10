@@ -104,8 +104,8 @@ export default async function NewQuestionPage({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="p-6 md:p-8 lg:p-10">
+    <div>
+      <div className="p-8">
 
         {/* Header */}
         <div className="mb-8">

@@ -158,7 +158,7 @@ export default function EditQuestionForm({
         <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
           <Link
             href={`/dashboard/assessments/${assessmentId}/questions/${question.id}`}
-            className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-violet-50/40"
           >
             Cancel
           </Link>

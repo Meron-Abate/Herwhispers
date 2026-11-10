@@ -150,7 +150,7 @@ export default function CampaignForm({
         <button
           type="submit"
           disabled={assessments.length === 0 || isPending}
-          className="rounded-lg bg-black px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+          className="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
         >
           {isPending ? "Creating…" : "Create Campaign"}
         </button>

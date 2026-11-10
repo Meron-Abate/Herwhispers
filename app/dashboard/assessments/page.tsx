@@ -3,22 +3,57 @@ import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 
 export default async function AssessmentsPage() {
-  const assessments = await prisma.assessments.findMany({
-    include: {
-      questions: true,
-      campaigns: true,
-    },
-    orderBy: {
-      created_at: "desc",
-    },
-  })
+  const [assessments, resultCounts] = await Promise.all([
+    prisma.assessments.findMany({
+      include: {
+        questions: true,
+        campaigns: true,
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+    }),
+
+    prisma.assessment_attempts.groupBy({
+      by: ["assessment_id", "result"],
+      where: {
+        result: { not: null },
+      },
+      _count: {
+        _all: true,
+      },
+    }),
+  ])
+
+  const countsByAssessment = new Map<
+    string,
+    { eligible: number; notEligible: number; needsReview: number }
+  >()
+
+  for (const row of resultCounts) {
+    const entry = countsByAssessment.get(row.assessment_id) ?? {
+      eligible: 0,
+      notEligible: 0,
+      needsReview: 0,
+    }
+
+    if (row.result === "ELIGIBLE") {
+      entry.eligible = row._count._all
+    } else if (row.result === "NOT_ELIGIBLE") {
+      entry.notEligible = row._count._all
+    } else if (row.result === "NEEDS_REVIEW") {
+      entry.needsReview = row._count._all
+    }
+
+    countsByAssessment.set(row.assessment_id, entry)
+  }
 
   return (
     <div className="p-8">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Assessments
           </h1>
 
@@ -29,7 +64,7 @@ export default async function AssessmentsPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm">
         {assessments.length === 0 ? (
           <div className="p-8 text-center">
             <h2 className="text-lg font-semibold text-gray-900">
@@ -42,7 +77,7 @@ export default async function AssessmentsPage() {
           </div>
         ) : (
           <table className="w-full">
-            <thead className="border-b bg-gray-50">
+            <thead className="border-b border-slate-100 bg-slate-50/80">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase text-gray-500">
                   Assessment
@@ -54,6 +89,18 @@ export default async function AssessmentsPage() {
 
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase text-gray-500">
                   Campaigns
+                </th>
+
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase text-gray-500">
+                  Eligible
+                </th>
+
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase text-gray-500">
+                  Not Eligible
+                </th>
+
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase text-gray-500">
+                  Needs Review
                 </th>
 
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase text-gray-500">
@@ -70,30 +117,53 @@ export default async function AssessmentsPage() {
               </tr>
             </thead>
 
-            <tbody className="divide-y">
-              {assessments.map((assessment) => (
-                <tr key={assessment.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {assessment.title}
-                      </p>
+            <tbody className="divide-y divide-slate-100">
+              {assessments.map((assessment) => {
+                const counts = countsByAssessment.get(assessment.id) ?? {
+                  eligible: 0,
+                  notEligible: 0,
+                  needsReview: 0,
+                }
 
-                      {assessment.description && (
-                        <p className="mt-1 text-sm text-gray-500">
-                          {assessment.description}
+                return (
+                  <tr key={assessment.id} className="hover:bg-violet-50/40">
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {assessment.title}
                         </p>
-                      )}
-                    </div>
-                  </td>
 
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    {assessment.questions.length}
-                  </td>
+                        <p className="mt-1 text-sm text-gray-500">
+                          {assessment.description ?? "No description"}
+                        </p>
+                      </div>
+                    </td>
 
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    {assessment.campaigns.length}
-                  </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {assessment.questions.length}
+                    </td>
+
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {assessment.campaigns.length}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                        {counts.eligible}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span className="rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 ring-1 ring-inset ring-rose-600/20">
+                        {counts.notEligible}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                        {counts.needsReview}
+                      </span>
+                    </td>
 
                   <td className="px-6 py-4">
                     <span
@@ -120,7 +190,8 @@ export default async function AssessmentsPage() {
                     </Link>
                   </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         )}

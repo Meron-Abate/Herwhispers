@@ -37,7 +37,7 @@ export default async function EditQuestionPage({
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
+    <main className="p-8">
       <div className="mx-auto max-w-3xl">
         <div className="mb-6">
           <Link
@@ -49,7 +49,7 @@ export default async function EditQuestionPage({
         </div>
 
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Edit Question
           </h1>
 

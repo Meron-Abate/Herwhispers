@@ -273,6 +273,7 @@ model students {
   created_at          DateTime              @default(now()) @db.Timestamptz(6)
   updated_at          DateTime              @default(now()) @db.Timestamptz(6)
   assessment_attempts assessment_attempts[]
+  health_questions    health_questions[]
   participants        participants[]
   universities        universities?         @relation(fields: [university_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -363,4 +364,83 @@ enum waiting_list_status {
   WAITING
   ALLOCATED
   REMOVED
+}
+
+model health_categories {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String              @unique @db.VarChar(100)
+  is_active         Boolean             @default(true)
+  sort_order        Int                 @default(0)
+  doctors           doctors[]
+  health_questions  health_questions[]
+  anonymous_stories anonymous_stories[]
+}
+
+model doctors {
+  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name         String             @db.VarChar(150)
+  telegram_id       BigInt?            @unique
+  category_id       String?            @db.Uuid
+  is_active         Boolean            @default(true)
+  created_at        DateTime           @default(now()) @db.Timestamptz(6)
+  health_categories health_categories? @relation(fields: [category_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  health_questions  health_questions[]
+  health_answers    health_answers[]
+}
+
+model health_questions {
+  id                 String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id         String                 @db.Uuid
+  category_id        String                 @db.Uuid
+  question_text      String
+  status             health_question_status @default(PENDING)
+  assigned_doctor_id String?                @db.Uuid
+  created_at         DateTime               @default(now()) @db.Timestamptz(6)
+  answered_at        DateTime?              @db.Timestamptz(6)
+  students           students               @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  health_categories  health_categories      @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  doctors            doctors?               @relation(fields: [assigned_doctor_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  health_answers     health_answers[]
+
+  @@index([status], map: "health_questions_status_idx")
+}
+
+model health_answers {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  question_id      String           @db.Uuid
+  doctor_id        String           @db.Uuid
+  answer_text      String
+  created_at       DateTime         @default(now()) @db.Timestamptz(6)
+  health_questions health_questions @relation(fields: [question_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  doctors          doctors          @relation(fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// No student reference on purpose: stories are anonymous.
+model anonymous_stories {
+  id                String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category_id       String                 @db.Uuid
+  story_text        String
+  status            anonymous_story_status @default(PENDING)
+  created_at        DateTime               @default(now()) @db.Timestamptz(6)
+  health_categories health_categories      @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model bot_states {
+  telegram_id BigInt   @id
+  state       String   @db.VarChar(50)
+  data        Json     @default("{}")
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+}
+
+enum health_question_status {
+  PENDING
+  ASSIGNED
+  ANSWERED
+  CLOSED
+}
+
+enum anonymous_story_status {
+  PENDING
+  APPROVED
+  REJECTED
 }

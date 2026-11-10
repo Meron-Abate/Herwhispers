@@ -39,7 +39,7 @@ export default async function QuestionDetailPage({
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
+    <main className="p-8">
       <div className="mx-auto max-w-4xl">
 
         {/* Back */}
@@ -59,7 +59,7 @@ export default async function QuestionDetailPage({
               Question {question.order_index}
             </p>
 
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               Question Details
             </h1>
 
@@ -137,7 +137,7 @@ export default async function QuestionDetailPage({
 
             <Link
               href={`/dashboard/assessments/${id}/questions/${question.id}/options/new`}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-violet-50/40"
             >
               Add Option
             </Link>

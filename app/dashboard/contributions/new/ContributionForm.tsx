@@ -6,39 +6,142 @@ import {
   createContribution,
   type ContributionFormState,
 } from "@/app/actions/contributions";
+import {
+  PRODUCT_CATEGORIES,
+  PRODUCT_CATEGORY_LABELS,
+} from "@/lib/productCategories";
 
 const initialState: ContributionFormState = { ok: false };
 
-
 const inputClass =
-  "w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10";
-const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
-const errorClass = "mt-1.5 text-sm text-red-600";
+  "w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900";
+const labelClass = "mb-1.5 block text-sm font-medium text-slate-700";
+const errorClass = "mt-1.5 text-sm text-rose-600";
 
 type DropdownData = {
   partners: { id: string; company_name: string }[];
-  campaigns: { id: string; name: string }[];
-  products: { id: string; name: string }[];
 };
 
-export default function ContributionForm({ data }: { data: DropdownData }) {
+export default function ContributionForm({
+  data,
+  defaultPartnerId,
+}: {
+  data: DropdownData;
+  defaultPartnerId?: string;
+}) {
   const [state, formAction, isPending] = useActionState(
     createContribution,
     initialState,
   );
 
-  // State to watch the contribution type so we can show/hide the manufacturer field
+  // Watch the contribution type so we can show/hide the manufacturer field
   const [contributionType, setContributionType] = useState("");
 
   return (
     <form
       action={formAction}
-      className="space-y-5 rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+      className="space-y-5 rounded-2xl border border-slate-200/70 bg-white p-6 shadow-sm"
     >
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        {/* Partner */}
+        <div>
+          <label htmlFor="partner_id" className={labelClass}>
+            Partner <span className="text-rose-500">*</span>
+          </label>
+          <select
+            id="partner_id"
+            name="partner_id"
+            required
+            defaultValue={
+              data.partners.some((p) => p.id === defaultPartnerId)
+                ? defaultPartnerId
+                : ""
+            }
+            className={inputClass}
+          >
+            <option value="">Select partner</option>
+            {data.partners.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.company_name}
+              </option>
+            ))}
+          </select>
+          {state.errors?.partner_id && (
+            <p className={errorClass}>{state.errors.partner_id}</p>
+          )}
+        </div>
+
+        {/* Category */}
+        <div>
+          <label htmlFor="category" className={labelClass}>
+            Category <span className="text-rose-500">*</span>
+          </label>
+          <select
+            id="category"
+            name="category"
+            required
+            defaultValue=""
+            className={inputClass}
+          >
+            <option value="" disabled>
+              Select category
+            </option>
+            {PRODUCT_CATEGORIES.map((category) => (
+              <option key={category} value={category}>
+                {PRODUCT_CATEGORY_LABELS[category]}
+              </option>
+            ))}
+          </select>
+          {state.errors?.category && (
+            <p className={errorClass}>{state.errors.category}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        {/* Quantity */}
+        <div>
+          <label htmlFor="quantity" className={labelClass}>
+            How many did they donate? <span className="text-rose-500">*</span>
+          </label>
+          <input
+            id="quantity"
+            name="quantity"
+            type="number"
+            min="1"
+            required
+            placeholder="e.g., 1000"
+            className={inputClass}
+          />
+          {state.errors?.quantity && (
+            <p className={errorClass}>{state.errors.quantity}</p>
+          )}
+        </div>
+
+        {/* Delivery status */}
+        <div>
+          <label htmlFor="delivery_status" className={labelClass}>
+            Received?
+          </label>
+          <select
+            id="delivery_status"
+            name="delivery_status"
+            defaultValue="DELIVERED"
+            className={inputClass}
+          >
+            <option value="DELIVERED">Received. Add to stock now</option>
+            <option value="PENDING">Not yet. Promised</option>
+          </select>
+          {state.errors?.delivery_status && (
+            <p className={errorClass}>{state.errors.delivery_status}</p>
+          )}
+        </div>
+      </div>
+
       {/* Contribution Type */}
       <div>
         <label htmlFor="contribution_type" className={labelClass}>
-          Contribution Type <span className="text-red-500">*</span>
+          Contribution Type <span className="text-rose-500">*</span>
         </label>
         <select
           id="contribution_type"
@@ -62,7 +165,7 @@ export default function ContributionForm({ data }: { data: DropdownData }) {
       {contributionType === "SUPPORT_THROUGH_PAYING_MANUFACTURER" && (
         <div>
           <label htmlFor="manufacturer_name" className={labelClass}>
-            Manufacturer Name <span className="text-red-500">*</span>
+            Manufacturer Name <span className="text-rose-500">*</span>
           </label>
           <input
             id="manufacturer_name"
@@ -78,98 +181,6 @@ export default function ContributionForm({ data }: { data: DropdownData }) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        {/* Partner */}
-        <div>
-          <label htmlFor="partner_id" className={labelClass}>
-            Partner <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="partner_id"
-            name="partner_id"
-            required
-            className={inputClass}
-          >
-            <option value="">Select partner</option>
-            {data.partners.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.company_name}
-              </option>
-            ))}
-          </select>
-          {state.errors?.partner_id && (
-            <p className={errorClass}>{state.errors.partner_id}</p>
-          )}
-        </div>
-
-        {/* Campaign */}
-        <div>
-          <label htmlFor="campaign_id" className={labelClass}>
-            Campaign <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="campaign_id"
-            name="campaign_id"
-            required
-            className={inputClass}
-          >
-            <option value="">Select campaign</option>
-            {data.campaigns.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          {state.errors?.campaign_id && (
-            <p className={errorClass}>{state.errors.campaign_id}</p>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        {/* Product */}
-        <div>
-          <label htmlFor="product_id" className={labelClass}>
-            Product <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="product_id"
-            name="product_id"
-            required
-            className={inputClass}
-          >
-            <option value="">Select product</option>
-            {data.products.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-          {state.errors?.product_id && (
-            <p className={errorClass}>{state.errors.product_id}</p>
-          )}
-        </div>
-
-        {/* Quantity */}
-        <div>
-          <label htmlFor="quantity" className={labelClass}>
-            Quantity <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="quantity"
-            name="quantity"
-            type="number"
-            min="1"
-            required
-            placeholder="e.g., 1000"
-            className={inputClass}
-          />
-          {state.errors?.quantity && (
-            <p className={errorClass}>{state.errors.quantity}</p>
-          )}
-        </div>
-      </div>
-
       {/* Notes */}
       <div>
         <label htmlFor="notes" className={labelClass}>
@@ -184,18 +195,23 @@ export default function ContributionForm({ data }: { data: DropdownData }) {
         />
       </div>
 
+      <p className="rounded-lg bg-violet-50 px-4 py-3 text-sm text-violet-800">
+        Donations go into one shared stock pool, counted by category. You give
+        campaigns their share from the Allocations page.
+      </p>
+
       {/* Actions */}
       <div className="flex items-center justify-end gap-3 pt-2">
         <Link
           href="/dashboard/contributions"
-          className="rounded-lg px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100"
+          className="rounded-xl px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
         >
           Cancel
         </Link>
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-lg bg-black px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:bg-gray-300"
+          className="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 disabled:opacity-50"
         >
           {isPending ? "Saving…" : "Add Contribution"}
         </button>

@@ -89,15 +89,15 @@ async function findCampaignProduct(
     select: {
       id: true,
       product_id: true,
+      assigned_quantity: true,
     },
   })
 }
 
 /**
- * Available quantity = delivered partner contributions for the campaign
- * product, minus quantities already committed by non-cancelled allocations.
- * Only DELIVERED contributions count: partially delivered contributions have
- * no delivered-quantity field, so counting them would overstate stock.
+ * Available quantity = the stock assigned to this campaign for the product
+ * (taken from the shared inventory pool on the Inventory page), minus
+ * quantities already committed by non-cancelled allocations.
  */
 async function getQuantityBalance(
   db: DbClient,
@@ -105,38 +105,23 @@ async function getQuantityBalance(
   campaignProduct: {
     id: string
     product_id: string
+    assigned_quantity: number
   }
 ) {
-  const [contributions, allocations] =
-    await Promise.all([
-      db.partner_contributions.aggregate({
-        where: {
-          campaign_id: campaignId,
-          product_id: campaignProduct.product_id,
-          delivery_status: "DELIVERED",
-        },
-        _sum: {
-          quantity: true,
-        },
-      }),
+  const allocations = await db.allocations.aggregate({
+    where: {
+      campaign_id: campaignId,
+      campaign_product_id: campaignProduct.id,
+      status: {
+        not: "CANCELLED",
+      },
+    },
+    _sum: {
+      quantity: true,
+    },
+  })
 
-      db.allocations.aggregate({
-        where: {
-          campaign_id: campaignId,
-          campaign_product_id:
-            campaignProduct.id,
-          status: {
-            not: "CANCELLED",
-          },
-        },
-        _sum: {
-          quantity: true,
-        },
-      }),
-    ])
-
-  const contributedQuantity =
-    contributions._sum.quantity ?? 0
+  const contributedQuantity = campaignProduct.assigned_quantity
 
   const allocatedQuantity =
     allocations._sum.quantity ?? 0

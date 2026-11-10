@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { categoryLabel } from "@/lib/productCategories"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { getEqualAllocationPreview } from "@/lib/allocations"
@@ -81,7 +82,7 @@ export default async function EqualAllocationPage({
           </p>
 
           <p className="mt-1 text-sm text-gray-500">
-            Product: {product.name}
+            Product: {product.name} · {categoryLabel(product.category)}
             {product.unit ? ` (${product.unit})` : ""}
           </p>
 

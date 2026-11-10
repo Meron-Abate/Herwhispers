@@ -3,14 +3,26 @@
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
+import { isProductCategory } from "@/lib/productCategories"
 
 const LIST_PATH = "/dashboard/Products"
+
+function readCategory(formData: FormData) {
+  const value = String(formData.get("category") ?? "").trim()
+
+  if (!isProductCategory(value)) {
+    throw new Error("Choose a valid product category.")
+  }
+
+  return value
+}
 
 export async function createProduct(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim()
   const description = String(formData.get("description") ?? "").trim()
   const unit = String(formData.get("unit") ?? "").trim() || "piece"
   const is_active = formData.get("is_active") === "on"
+  const category = readCategory(formData)
 
   if (!name) {
     throw new Error("Product name is required.")
@@ -21,6 +33,7 @@ export async function createProduct(formData: FormData) {
       name,
       description: description || null,
       unit,
+      category,
       is_active,
     },
   })
@@ -50,6 +63,7 @@ export async function updateProduct(formData: FormData) {
       name,
       description: description || null,
       unit,
+      category: readCategory(formData),
       is_active,
       updated_at: new Date(),
     },

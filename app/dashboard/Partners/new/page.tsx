@@ -1,5 +1,9 @@
 import Link from "next/link"
 import { createPartner } from "@/app/actions/partners"
+import {
+  PRODUCT_CATEGORIES,
+  PRODUCT_CATEGORY_LABELS,
+} from "@/lib/productCategories"
 
 export default function NewPartnerPage() {
   return (
@@ -119,6 +123,46 @@ export default function NewPartnerPage() {
             rows={3}
             className="w-full rounded-lg border px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2"
           />
+        </div>
+
+        <div className="rounded-xl border border-violet-200 bg-violet-50/40 p-5">
+          <h2 className="text-sm font-semibold text-slate-900">
+            What did they donate?
+          </h2>
+
+          <p className="mt-1 mb-4 text-xs text-slate-500">
+            Enter how many of each category. Leave blank for none. These are
+            added to the inventory.
+          </p>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {PRODUCT_CATEGORIES.map((category) => (
+              <label key={category} className="text-sm">
+                <span className="mb-1 block font-medium text-gray-700">
+                  {PRODUCT_CATEGORY_LABELS[category]}
+                </span>
+
+                <input
+                  name={`donation_${category}`}
+                  type="number"
+                  min={0}
+                  step={1}
+                  placeholder="0"
+                  className="w-full rounded-lg border bg-white px-4 py-2.5 text-sm text-gray-900"
+                />
+              </label>
+            ))}
+          </div>
+
+          <label className="mt-4 flex items-center gap-3 text-sm text-gray-700">
+            <input
+              name="received"
+              type="checkbox"
+              defaultChecked
+              className="h-4 w-4"
+            />
+            Already received. Add to stock now
+          </label>
         </div>
 
         <div className="flex items-center gap-3">

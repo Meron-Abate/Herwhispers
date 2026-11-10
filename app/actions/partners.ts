@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
+import { ensureCategoryProduct } from "@/lib/inventory"
+import { PRODUCT_CATEGORIES } from "@/lib/productCategories"
 
 const LIST_PATH = "/dashboard/Partners"
 
@@ -18,6 +20,36 @@ export async function createPartner(formData: FormData) {
     throw new Error("Company name is required.")
   }
 
+  // Optional first donation: one number per category. Blank or 0 is skipped.
+  const received = formData.get("received") === "on"
+
+  const donations: Array<{
+    category: (typeof PRODUCT_CATEGORIES)[number]
+    quantity: number
+  }> = []
+
+  for (const category of PRODUCT_CATEGORIES) {
+    const raw = String(formData.get(`donation_${category}`) ?? "").trim()
+
+    if (!raw) {
+      continue
+    }
+
+    const quantity = Number(raw)
+
+    if (!Number.isInteger(quantity) || quantity < 0) {
+      throw new Error("Donation quantities must be whole numbers.")
+    }
+
+    if (quantity > 0) {
+      donations.push({ category, quantity })
+    }
+  }
+
+  const products = await Promise.all(
+    donations.map((donation) => ensureCategoryProduct(donation.category))
+  )
+
   await prisma.partners.create({
     data: {
       company_name,
@@ -26,10 +58,22 @@ export async function createPartner(formData: FormData) {
       email: email || null,
       address: address || null,
       is_active,
+      partner_contributions: {
+        create: donations.map((donation, index) => ({
+          product_id: products[index].id,
+          contribution_type: "PHYSICAL_PRODUCT" as const,
+          quantity: donation.quantity,
+          delivery_status: received
+            ? ("DELIVERED" as const)
+            : ("PENDING" as const),
+          delivered_at: received ? new Date() : null,
+        })),
+      },
     },
   })
 
   revalidatePath(LIST_PATH)
+  revalidatePath("/dashboard/Products")
   redirect(LIST_PATH)
 }
 

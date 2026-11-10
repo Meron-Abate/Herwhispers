@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { categoryLabel } from "@/lib/productCategories"
 import { notFound } from "next/navigation"
 import type { ReactNode } from "react"
 import { prisma } from "@/lib/prisma"
@@ -339,6 +340,11 @@ export default async function AllocationDetailPage({
                 <DetailItem
                   label="Name"
                   value={product.name}
+                />
+
+                <DetailItem
+                  label="Category"
+                  value={categoryLabel(product.category)}
                 />
 
                 <DetailItem

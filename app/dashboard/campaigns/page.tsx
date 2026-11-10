@@ -1,6 +1,6 @@
-import Link from "next/link"
-import { prisma } from "@/lib/prisma"
-import { completeCampaign } from "@/app/actions/campaigns"
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import CompleteCampaignButton from "./CompleteCampaignButton";
 
 const statusStyles: Record<string, string> = {
 DRAFT: "bg-gray-100 text-gray-700",

@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
+import DeleteQuestionButton from "./DeleteQuestionButton"
 
 type AssessmentPageProps = {
   params: Promise<{
@@ -367,12 +368,16 @@ export default async function AssessmentPage({
 
                     {/* EDIT BUTTON */}
 
-                    <Link
-                      href={`/dashboard/assessments/${assessment.id}/questions/${question.id}/edit`}
-                      className="inline-flex shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      Edit
-                    </Link>
+                    <div className="flex shrink-0 items-start gap-2">
+                      <Link
+                        href={`/dashboard/assessments/${assessment.id}/questions/${question.id}/edit`}
+                        className="inline-flex shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        Edit
+                      </Link>
+
+                      <DeleteQuestionButton questionId={question.id} />
+                    </div>
 
                   </div>
 
